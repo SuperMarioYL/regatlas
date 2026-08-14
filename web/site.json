@@ -1,0 +1,69 @@
+{
+  "schema": 1,
+  "name": "regatlas",
+  "github": "https://github.com/SuperMarioYL/regatlas",
+  "host": "regatlas.lei6393.com",
+  "lang": { "primary": "zh", "toggle": true },
+  "accent": ["#d4a13e", "#bd8a2c", "#e6c266"],
+  "hero": {
+    "eyebrow": { "zh": "本地运行 · 无需注册 · 开源", "en": "Runs locally · No signup · Open source" },
+    "headline": {
+      "zh": "把「模型变差了」\n变成「工具调用 -33%」",
+      "en": "Turn \"the model got worse\"\ninto \"tool-calling -33%\""
+    },
+    "sub": {
+      "zh": "跨版本回放同一批任务，一条命令给出每项能力的回归——如工具调用 -33%、参数 schema +17%。",
+      "en": "Replay the same set of tasks across model versions — one command gives per-capability regressions like tool-calling -33%, argument schema +17%."
+    },
+    "command": "regatlas run --suite suites/toolcalling.yaml --models opus-4,opus-5 --recordings tests/fixtures",
+    "cta": { "zh": "开始使用", "en": "Get started" },
+    "ctaGithub": { "zh": "在 GitHub 查看", "en": "View on GitHub" },
+    "scroll": { "zh": "了解更多", "en": "Learn more" }
+  },
+  "advantages": [
+    {
+      "title": { "zh": "把感觉变成证据", "en": "Turn a feeling into evidence" },
+      "body": {
+        "zh": "版本换班后，不用再手动对比输出、猜「是不是变差了」。回放同一批任务，直接得到每项能力的回归数字，贴进 PR 就是证据。",
+        "en": "After a model swap, stop manually comparing outputs and guessing \"is it worse?\" Replay the same tasks and get per-capability regression numbers that paste straight into a PR as proof."
+      },
+      "chips": ["› tool-calling -33%", "› refusal 0%", "› schema +17%"]
+    },
+    {
+      "title": { "zh": "同一个接口，也能抓到行为退步", "en": "Same interface — still catches behavior loss" },
+      "body": {
+        "zh": "换版本后，工具调用可能开始失败、拒答率可能爬升，而接口定义从不变。regatlas 不看接口、看行为：工具名对不对、有没有拒答、参数合不合规——机器可核对，不靠感觉。",
+        "en": "After a swap, tool calls can start failing and refusals can climb, while the interface definition never changes. regatlas looks past the interface at behavior: did the tool name match, did it refuse, did the arguments validate — machine-checkable, not vibes."
+      },
+      "chips": ["› tool-name match", "› zh+en refusal", "› schema check"]
+    },
+    {
+      "title": { "zh": "零配置看到第一份回归图谱", "en": "See your first atlas with zero setup" },
+      "body": {
+        "zh": "仓库自带任务套件和离线录制响应，从 git clone 到第一份能力回归图谱，不需要任何 API key、不需要注册账号。",
+        "en": "The repo ships with task suites and offline recorded responses — from git clone to your first per-capability atlas needs no API key and no account."
+      },
+      "chips": ["› 2 bundled suites", "› offline responses", "› no API key"]
+    },
+    {
+      "title": { "zh": "自托管，结果归你", "en": "Self-hosted. The results are yours." },
+      "body": {
+        "zh": "一条命令在本地产出可移植的回归图谱——markdown 表格 + 原始 JSON，贴进 PR、issue、文档都行。MIT 开源，没有托管依赖，数据不出本机。",
+        "en": "One command produces a portable regression atlas on your machine — a markdown table plus raw JSON you can drop into a PR, issue, or doc. MIT open source, no hosted dependency, your data never leaves."
+      },
+      "chips": ["› markdown + JSON", "› MIT open source", "› data stays local"]
+    }
+  ],
+  "scene": { "kind": "mesh" },
+  "cta": {
+    "headline": { "zh": "换版本之前，先跑一条命令", "en": "Run one command before you ship the swap" },
+    "sub": {
+      "zh": "把版本换班的隐性回归变成可贴进 PR 的证据。MIT 开源，本地运行。",
+      "en": "Turn a version swap's silent regressions into PR-pasteable evidence. MIT open source, runs locally."
+    },
+    "button": { "zh": "开始使用", "en": "Get started" }
+  },
+  "footer": {
+    "tag": { "zh": "模型版本回归归因 CLI · MIT 开源", "en": "Model-version regression-attribution CLI · MIT open source" }
+  }
+}
