@@ -1,0 +1,53 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "regatlas"
+version = "0.1.0"
+description = "Model-version regression-attribution CLI — replay a fixed task-suite across model versions, align trajectories by span semantics, and map per-capability deltas via machine-checkable breakage signals."
+readme = "README.md"
+requires-python = ">=3.12"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "SuperMarioYL" }]
+keywords = ["llm", "evaluation", "regression", "attribution", "model-versioning", "agent"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Testing",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "typer>=0.27",
+    "pydantic>=2.13",
+    "httpx>=0.28",
+    "pyyaml>=6.0",
+    "rich>=13.7",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+]
+
+[project.scripts]
+regatlas = "regatlas.cli:app"
+
+[project.urls]
+Homepage = "https://github.com/SuperMarioYL/regatlas"
+Repository = "https://github.com/SuperMarioYL/regatlas"
+Issues = "https://github.com/SuperMarioYL/regatlas/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+regatlas = ["builtin_suites/*.yaml"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

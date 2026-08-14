@@ -1,0 +1,104 @@
+name: toolcalling
+description: >
+  Tool-calling regression suite. Each task exposes one function and expects the
+  model to call a specific function with arguments that parse as JSON and carry
+  the declared required keys. A version swap that mis-names the tool, drops the
+  call, or emits malformed arguments shows up as a regression on this suite.
+tasks:
+  - id: t1
+    capability: tool-calling
+    prompt: "What's the weather in Beijing right now?"
+    expected_tool_call: get_weather
+    expected_schema: { required: [location] }
+    tools:
+      - type: function
+        function:
+          name: get_weather
+          description: Get the current weather for a city.
+          parameters:
+            type: object
+            properties:
+              location: { type: string, description: "City name." }
+            required: [location]
+
+  - id: t2
+    capability: tool-calling
+    prompt: "What's on my calendar for 2026-08-15?"
+    expected_tool_call: get_calendar
+    expected_schema: { required: [date] }
+    tools:
+      - type: function
+        function:
+          name: get_calendar
+          description: List calendar events for a date.
+          parameters:
+            type: object
+            properties:
+              date: { type: string, description: "ISO date." }
+            required: [date]
+
+  - id: t3
+    capability: tool-calling
+    prompt: "What is 17 * 24?"
+    expected_tool_call: calculate
+    expected_schema: { required: [expression] }
+    tools:
+      - type: function
+        function:
+          name: calculate
+          description: Evaluate an arithmetic expression.
+          parameters:
+            type: object
+            properties:
+              expression: { type: string, description: "Arithmetic expression." }
+            required: [expression]
+
+  - id: t4
+    capability: tool-calling
+    prompt: "Search the web for the latest Rust release notes."
+    expected_tool_call: web_search
+    expected_schema: { required: [query] }
+    tools:
+      - type: function
+        function:
+          name: web_search
+          description: Run a web search and return titles.
+          parameters:
+            type: object
+            properties:
+              query: { type: string, description: "Search query." }
+            required: [query]
+
+  - id: t5
+    capability: tool-calling
+    prompt: "Send an email to ada@example.com with subject 'Hello'."
+    expected_tool_call: send_email
+    expected_schema: { required: [to, subject] }
+    tools:
+      - type: function
+        function:
+          name: send_email
+          description: Send an email message.
+          parameters:
+            type: object
+            properties:
+              to: { type: string, description: "Recipient." }
+              subject: { type: string, description: "Subject line." }
+              body: { type: string, description: "Message body." }
+            required: [to, subject]
+
+  - id: t6
+    capability: tool-calling
+    prompt: "Create a document titled 'Q3 Plan'."
+    expected_tool_call: create_doc
+    expected_schema: { required: [title] }
+    tools:
+      - type: function
+        function:
+          name: create_doc
+          description: Create a new document with a title.
+          parameters:
+            type: object
+            properties:
+              title: { type: string, description: "Document title." }
+            required: [title]

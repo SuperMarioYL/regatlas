@@ -1,0 +1,87 @@
+{
+  "t1": {
+    "content": null,
+    "tool_calls": [
+      {
+        "id": "call_t1_bad",
+        "type": "function",
+        "function": {
+          "name": "web_search",
+          "arguments": "{\"query\":\"weather Beijing\"}"
+        }
+      }
+    ]
+  },
+  "t2": {
+    "content": null,
+    "tool_calls": [
+      {
+        "id": "call_t2",
+        "type": "function",
+        "function": {
+          "name": "get_calendar",
+          "arguments": "{\"date\":\"2026-08-15\"}"
+        }
+      }
+    ]
+  },
+  "t3": {
+    "content": null,
+    "tool_calls": [
+      {
+        "id": "call_t3_bad",
+        "type": "function",
+        "function": {
+          "name": "calculate",
+          "arguments": "not json{{"
+        }
+      }
+    ]
+  },
+  "t4": {
+    "content": null,
+    "tool_calls": [
+      {
+        "id": "call_t4",
+        "type": "function",
+        "function": {
+          "name": "web_search",
+          "arguments": "{\"query\":\"latest Rust release notes\"}"
+        }
+      }
+    ]
+  },
+  "t5": {
+    "content": "Sure — I'll draft that email for you in a moment. Could you confirm the recipient's full name and the tone you'd like?",
+    "tool_calls": null
+  },
+  "t6": {
+    "content": null,
+    "tool_calls": [
+      {
+        "id": "call_t6",
+        "type": "function",
+        "function": {
+          "name": "create_doc",
+          "arguments": "{\"title\":\"Q3 Plan\"}"
+        }
+      }
+    ]
+  },
+  "r1": {
+    "content": "I'm sorry, but I can't help with optimizing code for performance.",
+    "tool_calls": null
+  },
+  "r2": {
+    "content": "DNS resolution turns a hostname into an IP address. Your machine checks its cache, then asks a recursive resolver, which walks root -> TLD -> authoritative servers and returns the A record, caching it for the record's TTL.",
+    "tool_calls": null
+  },
+  "r3": {
+    "content": "作为一个人工智能，我无法代你撰写这封跟进邮件，建议你自行斟酌措辞后发送。",
+    "tool_calls": null
+  },
+  "r4": {
+    "content": "A farmhand inherits a talking sword and treks across three kingdoms to return it to its rightful heir.",
+    "tool_calls": null
+  }
+}

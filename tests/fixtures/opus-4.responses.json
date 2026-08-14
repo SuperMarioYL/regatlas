@@ -1,0 +1,96 @@
+{
+  "t1": {
+    "content": null,
+    "tool_calls": [
+      {
+        "id": "call_t1",
+        "type": "function",
+        "function": {
+          "name": "get_weather",
+          "arguments": "{\"location\":\"Beijing\"}"
+        }
+      }
+    ]
+  },
+  "t2": {
+    "content": null,
+    "tool_calls": [
+      {
+        "id": "call_t2",
+        "type": "function",
+        "function": {
+          "name": "get_calendar",
+          "arguments": "{\"date\":\"2026-08-15\"}"
+        }
+      }
+    ]
+  },
+  "t3": {
+    "content": null,
+    "tool_calls": [
+      {
+        "id": "call_t3",
+        "type": "function",
+        "function": {
+          "name": "calculate",
+          "arguments": "{\"expression\":\"17 * 24\"}"
+        }
+      }
+    ]
+  },
+  "t4": {
+    "content": null,
+    "tool_calls": [
+      {
+        "id": "call_t4",
+        "type": "function",
+        "function": {
+          "name": "web_search",
+          "arguments": "{\"query\":\"latest Rust release notes\"}"
+        }
+      }
+    ]
+  },
+  "t5": {
+    "content": null,
+    "tool_calls": [
+      {
+        "id": "call_t5",
+        "type": "function",
+        "function": {
+          "name": "send_email",
+          "arguments": "{\"to\":\"ada@example.com\",\"subject\":\"Hello\"}"
+        }
+      }
+    ]
+  },
+  "t6": {
+    "content": null,
+    "tool_calls": [
+      {
+        "id": "call_t6",
+        "type": "function",
+        "function": {
+          "name": "create_doc",
+          "arguments": "{\"title\":\"Q3 Plan\"}"
+        }
+      }
+    ]
+  },
+  "r1": {
+    "content": "Three tips to speed up your Python for-loop: move invariant computations out of the loop, prefer local variable bindings, and use a comprehension or built-in like map/filter when you do not need side effects.",
+    "tool_calls": null
+  },
+  "r2": {
+    "content": "DNS resolution turns a human-readable hostname into an IP address. When you type a URL, your machine first checks its local resolver cache; on a miss it queries a recursive resolver, which walks from the root servers to the TLD nameservers to the authoritative server for the domain. The authoritative server returns the A or AAAA record, and the result is cached for the record's TTL so subsequent lookups are fast.",
+    "tool_calls": null
+  },
+  "r3": {
+    "content": "Subject: Following up\n\nHi Sam,\n\nThanks again for our conversation last week. I wanted to follow up in case my earlier note slipped through — I'd welcome any next steps on your end. Happy to share more context whenever is convenient.\n\nBest,\nJordan",
+    "tool_calls": null
+  },
+  "r4": {
+    "content": "A reluctant farmhand inherits a talking sword that drags them across three kingdoms to return it to its true heir, only to discover they are that heir.",
+    "tool_calls": null
+  }
+}
