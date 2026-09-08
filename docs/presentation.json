@@ -1,0 +1,82 @@
+{
+  "name": "regatlas",
+  "tagline": "Compare versions through concrete task signals.",
+  "architecture": {
+    "title": "regatlas / data flow",
+    "nodes": [
+      {
+        "title": "Task suite",
+        "detail": "Prompts / tools / expectations"
+      },
+      {
+        "title": "Replay and detectors",
+        "detail": "Responses to signal-bearing spans"
+      },
+      {
+        "title": "Keyed alignment",
+        "detail": "Task ID and turn index"
+      },
+      {
+        "title": "Delta report",
+        "detail": "Capability aggregate / JSON"
+      }
+    ],
+    "edges": [
+      [
+        0,
+        1
+      ],
+      [
+        1,
+        2
+      ],
+      [
+        2,
+        3
+      ]
+    ]
+  },
+  "process": {
+    "title": "regatlas / example workflow",
+    "steps": [
+      {
+        "title": "Read two fixtures",
+        "detail": "Six tool-calling tasks"
+      },
+      {
+        "title": "Compute breakage",
+        "detail": "Name / refusal / arguments"
+      },
+      {
+        "title": "Align and aggregate",
+        "detail": "Baseline to candidate"
+      }
+    ],
+    "result": "Synthetic fixtures show -33 percentage points in tool matching and +17 in argument violations."
+  },
+  "integrations": {
+    "title": "regatlas / supported routes",
+    "items": [
+      {
+        "title": "YAML suites",
+        "detail": "Tasks and expected tool calls"
+      },
+      {
+        "title": "Recording JSON",
+        "detail": "Offline response fixtures"
+      },
+      {
+        "title": "OpenAI-compatible API",
+        "detail": "Configured live replay"
+      },
+      {
+        "title": "JSONL trajectories",
+        "detail": "Per-task spans"
+      },
+      {
+        "title": "Markdown / JSON",
+        "detail": "Capability reports"
+      }
+    ]
+  }
+}

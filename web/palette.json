@@ -1,0 +1,38 @@
+{
+  "mode": "auto",
+  "id": "56e66c-6ae7bf-bcf6ac-2a5ad040c832",
+  "identity": "https://github.com/supermarioyl/regatlas",
+  "primary": "#56e66c",
+  "secondary": "#6ae7bf",
+  "highlight": "#bcf6ac",
+  "dark": {
+    "bg": "#050c0d",
+    "panel": "#0c1718",
+    "code": "#0a1715",
+    "ink": "#f2fdee",
+    "muted": "#95b9ac",
+    "line": "#173c22",
+    "primary": "#56e66c",
+    "secondary": "#6ae7bf",
+    "highlight": "#bcf6ac",
+    "accent": "#56e66c",
+    "buttonStart": "#32863f",
+    "buttonEnd": "#3c836d",
+    "buttonText": "#ffffff"
+  },
+  "light": {
+    "bg": "#f9fefa",
+    "panel": "#f7fef8",
+    "code": "#f3fdf5",
+    "ink": "#132a1f",
+    "muted": "#557b6f",
+    "line": "#cbf7d2",
+    "primary": "#31833e",
+    "secondary": "#3b806a",
+    "highlight": "#5e7b56",
+    "accent": "#31833e",
+    "buttonStart": "#32863f",
+    "buttonEnd": "#3c836d",
+    "buttonText": "#ffffff"
+  }
+}

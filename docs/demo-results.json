@@ -1,0 +1,29 @@
+{
+  "version": "0.1.0",
+  "scope": "Offline replay, keyed trajectory alignment and delta aggregation of shipped synthetic response fixtures. Fixture filenames are historical labels, not verified outputs from those named models.",
+  "inputs": [
+    {
+      "path": "examples/presentation-demo.py",
+      "sha256": "dc02f68cbec76e765fd14f35ca382bbcf0a134109ec5b78b9d4ba45a59b922f5"
+    },
+    {
+      "path": "suites/toolcalling.yaml",
+      "sha256": "e221912fbdd9f2f3438733a3c75baa59816c0f5d1f5321d50580a3d257f88f40"
+    },
+    {
+      "path": "tests/fixtures/opus-4.responses.json",
+      "sha256": "aa7275ab50be1604beb99110619a3d9c9b678e53eb10be409147d5f4a7a506d2"
+    },
+    {
+      "path": "tests/fixtures/opus-5.responses.json",
+      "sha256": "56f185ceca03d92333aec24ff5bf5977ae5b6078360fe71ce3ef3c8baa7bc5c5"
+    }
+  ],
+  "steps": [
+    {
+      "command": ".venv/bin/python examples/presentation-demo.py",
+      "output": "## regatlas delta map\n\n**baseline-fixture → candidate-fixture** · suite `toolcalling` · 6 tasks across 1 capability.\n\n| Capability | tool-call Δ | refusal Δ | schema Δ | n |\n|---|---|---|---|---|\n| tool-calling | ✗ -33% | · 0% | ✗ +17% | 6 |\n\n<!-- raw DeltaMap JSON — the portable regression artifact -->\n```json\n{\n  \"tool-calling\": {\n    \"tool_call_success_delta\": -0.3333333333333333,\n    \"refusal_detected_delta\": 0.0,\n    \"schema_violation_delta\": 0.16666666666666666,\n    \"n_tasks\": 6\n  }\n}\n```\n",
+      "exit_code": 0
+    }
+  ]
+}

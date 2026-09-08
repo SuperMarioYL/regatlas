@@ -1,69 +1,236 @@
 {
-  "schema": 1,
+  "schema": 3,
   "name": "regatlas",
   "github": "https://github.com/SuperMarioYL/regatlas",
   "host": "regatlas.lei6393.com",
-  "lang": { "primary": "zh", "toggle": true },
-  "accent": ["#d4a13e", "#bd8a2c", "#e6c266"],
+  "palette": "auto",
+  "lang": {
+    "primary": "zh",
+    "toggle": true
+  },
+  "meta": {
+    "visual_profile": "neon-particle",
+    "content_version": "0.1.0",
+    "demo_source": "docs/demo-results.json"
+  },
   "hero": {
-    "eyebrow": { "zh": "本地运行 · 无需注册 · 开源", "en": "Runs locally · No signup · Open source" },
+    "eyebrow": {
+      "zh": "回放固定套件，对齐两组轨迹，按能力汇总工具调用匹配、拒答词命中和参数检查的变化。",
+      "en": "Replay fixed suites, align two trajectories and summarize changes in tool-call matching, refusal signals and argument checks by capability."
+    },
     "headline": {
-      "zh": "把「模型变差了」\n变成「工具调用 -33%」",
-      "en": "Turn \"the model got worse\"\ninto \"tool-calling -33%\""
+      "zh": "让版本比较落到具体任务信号上。",
+      "en": "Compare versions through concrete task signals."
     },
     "sub": {
-      "zh": "跨版本回放同一批任务，一条命令给出每项能力的回归——如工具调用 -33%、参数 schema +17%。",
-      "en": "Replay the same set of tasks across model versions — one command gives per-capability regressions like tool-calling -33%, argument schema +17%."
+      "zh": "回放固定套件，对齐两组轨迹，按能力汇总工具调用匹配、拒答词命中和参数检查的变化。",
+      "en": "Replay fixed suites, align two trajectories and summarize changes in tool-call matching, refusal signals and argument checks by capability."
     },
-    "command": "regatlas run --suite suites/toolcalling.yaml --models opus-4,opus-5 --recordings tests/fixtures",
-    "cta": { "zh": "开始使用", "en": "Get started" },
-    "ctaGithub": { "zh": "在 GitHub 查看", "en": "View on GitHub" },
-    "scroll": { "zh": "了解更多", "en": "Learn more" }
+    "href": "#quickstart",
+    "cta": {
+      "zh": "运行示例",
+      "en": "Run the example"
+    },
+    "ctaGithub": {
+      "zh": "查看源码",
+      "en": "View source"
+    }
+  },
+  "scene": {
+    "kind": "neon-graph",
+    "caption": {
+      "zh": "图示展示组件关系；实际输出见下方示例。",
+      "en": "An illustrative component scene; recorded output appears below."
+    },
+    "fallback": "/assets/presentation/scene-dark.svg",
+    "fallbackLight": "/assets/presentation/scene-light.svg"
   },
   "advantages": [
     {
-      "title": { "zh": "把感觉变成证据", "en": "Turn a feeling into evidence" },
-      "body": {
-        "zh": "版本换班后，不用再手动对比输出、猜「是不是变差了」。回放同一批任务，直接得到每项能力的回归数字，贴进 PR 就是证据。",
-        "en": "After a model swap, stop manually comparing outputs and guessing \"is it worse?\" Replay the same tasks and get per-capability regression numbers that paste straight into a PR as proof."
+      "title": {
+        "zh": "固定输入",
+        "en": "Fixed inputs"
       },
-      "chips": ["› tool-calling -33%", "› refusal 0%", "› schema +17%"]
+      "body": {
+        "zh": "YAML 套件保存任务预期。",
+        "en": "YAML suites retain task expectations."
+      }
     },
     {
-      "title": { "zh": "同一个接口，也能抓到行为退步", "en": "Same interface — still catches behavior loss" },
-      "body": {
-        "zh": "换版本后，工具调用可能开始失败、拒答率可能爬升，而接口定义从不变。regatlas 不看接口、看行为：工具名对不对、有没有拒答、参数合不合规——机器可核对，不靠感觉。",
-        "en": "After a swap, tool calls can start failing and refusals can climb, while the interface definition never changes. regatlas looks past the interface at behavior: did the tool name match, did it refuse, did the arguments validate — machine-checkable, not vibes."
+      "title": {
+        "zh": "可追溯差值",
+        "en": "Traceable deltas"
       },
-      "chips": ["› tool-name match", "› zh+en refusal", "› schema check"]
+      "body": {
+        "zh": "按任务与轮次配对响应。",
+        "en": "Pair responses by task and turn."
+      }
     },
     {
-      "title": { "zh": "零配置看到第一份回归图谱", "en": "See your first atlas with zero setup" },
-      "body": {
-        "zh": "仓库自带任务套件和离线录制响应，从 git clone 到第一份能力回归图谱，不需要任何 API key、不需要注册账号。",
-        "en": "The repo ships with task suites and offline recorded responses — from git clone to your first per-capability atlas needs no API key and no account."
+      "title": {
+        "zh": "便于审阅",
+        "en": "Reviewable reports"
       },
-      "chips": ["› 2 bundled suites", "› offline responses", "› no API key"]
-    },
-    {
-      "title": { "zh": "自托管，结果归你", "en": "Self-hosted. The results are yours." },
       "body": {
-        "zh": "一条命令在本地产出可移植的回归图谱——markdown 表格 + 原始 JSON，贴进 PR、issue、文档都行。MIT 开源，没有托管依赖，数据不出本机。",
-        "en": "One command produces a portable regression atlas on your machine — a markdown table plus raw JSON you can drop into a PR, issue, or doc. MIT open source, no hosted dependency, your data never leaves."
-      },
-      "chips": ["› markdown + JSON", "› MIT open source", "› data stays local"]
+        "zh": "Markdown 表格附原始 JSON。",
+        "en": "Markdown tables include raw JSON."
+      }
     }
   ],
-  "scene": { "kind": "mesh" },
-  "cta": {
-    "headline": { "zh": "换版本之前，先跑一条命令", "en": "Run one command before you ship the swap" },
-    "sub": {
-      "zh": "把版本换班的隐性回归变成可贴进 PR 的证据。MIT 开源，本地运行。",
-      "en": "Turn a version swap's silent regressions into PR-pasteable evidence. MIT open source, runs locally."
+  "story": {
+    "intro": {
+      "title": {
+        "zh": "解决什么问题",
+        "en": "The task it solves"
+      },
+      "body": {
+        "zh": "更换模型之后，单看总体回答很难指出哪类任务发生变化。regatlas 将任务预期写入套件，对每条响应计算明确的布尔信号，再按任务 ID 与轮次对齐，保留从汇总差值回到具体响应的路径。",
+        "en": "After a model change, a general impression of answers may not reveal which tasks changed. regatlas records expectations in a suite, computes explicit Boolean signals for each response and aligns by task ID and turn, preserving a path from aggregate deltas to individual responses."
+      }
     },
-    "button": { "zh": "开始使用", "en": "Get started" }
+    "sections": [
+      {
+        "title": {
+          "zh": "从输入到结果",
+          "en": "From input to result"
+        },
+        "body": {
+          "zh": "从自带两份响应 fixture 回放六个任务。文件名中的模型标签仅是历史 fixture 名称，无法视为真实模型测量。百分号显示的是比例之差，应读作百分点变化。",
+          "en": "Replay six tasks from two shipped response fixtures. Model names in filenames are historical fixture labels, not verified model measurements. Percentage displays represent differences in rates and should be read as percentage-point changes."
+        },
+        "image": {
+          "light": "/assets/presentation/process-light.svg",
+          "dark": "/assets/presentation/process-dark.svg",
+          "alt": {
+            "zh": "从自带两份响应 fixture 回放六个任务。文件名中的模型标签仅是历史 fixture 名称，无法视为真实模型测量。百分号显示的是比例之差，应读作百分点变化。",
+            "en": "Replay six tasks from two shipped response fixtures. Model names in filenames are historical fixture labels, not verified model measurements. Percentage displays represent differences in rates and should be read as percentage-point changes."
+          }
+        }
+      },
+      {
+        "title": {
+          "zh": "工作原理",
+          "en": "How it works"
+        },
+        "body": {
+          "zh": "suite 读取 YAML，replay 从服务或 RecordingClient 得到响应，breakage 计算信号并产出 Span。align 按 `(task_id, turn_idx)` 配对，delta 按 capability 聚合 candidate − baseline，report 输出 Markdown 与 JSON。这里的 signed delta 是带正负号的数值差，不是密码学签名。",
+          "en": "suite loads YAML; replay receives service or RecordingClient responses; breakage computes signals and creates Spans. align pairs `(task_id, turn_idx)` and delta aggregates candidate minus baseline by capability. Reports contain Markdown and JSON. A signed delta is a positive or negative numeric difference, not a cryptographic signature."
+        },
+        "image": {
+          "light": "/assets/presentation/architecture-light.svg",
+          "dark": "/assets/presentation/architecture-dark.svg",
+          "alt": {
+            "zh": "suite 读取 YAML，replay 从服务或 RecordingClient 得到响应，breakage 计算信号并产出 Span。align 按 `(task_id, turn_idx)` 配对，delta 按 capability 聚合 candidate − baseline，report 输出 Markdown 与 JSON。这里的 signed delta 是带正负号的数值差，不是密码学签名。",
+            "en": "suite loads YAML; replay receives service or RecordingClient responses; breakage computes signals and creates Spans. align pairs `(task_id, turn_idx)` and delta aggregates candidate minus baseline by capability. Reports contain Markdown and JSON. A signed delta is a positive or negative numeric difference, not a cryptographic signature."
+          }
+        }
+      },
+      {
+        "title": {
+          "zh": "能力与接入",
+          "en": "Capabilities and integration"
+        },
+        "body": {
+          "zh": "内置 toolcalling 与 refusal 两套任务。工具成功信号检查是否输出预期工具名，不执行那个工具；schema 检查 JSON 与 required 字段，不是完整 JSON Schema 验证。拒答由中英文词表检测。",
+          "en": "The repository includes toolcalling and refusal suites. Tool success checks whether the expected tool name was emitted; it does not execute the tool. Schema checks cover JSON and required fields, not full JSON Schema validation. Refusal detection uses English and Chinese phrase lists."
+        },
+        "image": {
+          "light": "/assets/presentation/integrations-light.svg",
+          "dark": "/assets/presentation/integrations-dark.svg",
+          "alt": {
+            "zh": "内置 toolcalling 与 refusal 两套任务。工具成功信号检查是否输出预期工具名，不执行那个工具；schema 检查 JSON 与 required 字段，不是完整 JSON Schema 验证。拒答由中英文词表检测。",
+            "en": "The repository includes toolcalling and refusal suites. Tool success checks whether the expected tool name was emitted; it does not execute the tool. Schema checks cover JSON and required fields, not full JSON Schema validation. Refusal detection uses English and Chinese phrase lists."
+          }
+        }
+      }
+    ],
+    "details": [
+      {
+        "title": {
+          "zh": "使用方式",
+          "en": "Usage"
+        },
+        "body": {
+          "zh": "内置 toolcalling 与 refusal 两套任务。工具成功信号检查是否输出预期工具名，不执行那个工具；schema 检查 JSON 与 required 字段，不是完整 JSON Schema 验证。拒答由中英文词表检测。",
+          "en": "The repository includes toolcalling and refusal suites. Tool success checks whether the expected tool name was emitted; it does not execute the tool. Schema checks cover JSON and required fields, not full JSON Schema validation. Refusal detection uses English and Chinese phrase lists."
+        }
+      },
+      {
+        "title": {
+          "zh": "配置",
+          "en": "Configuration"
+        },
+        "body": {
+          "zh": "端点变量为 `REGATLAS_<NAME>_BASE_URL`、`_API_KEY`、`_MODEL`，别名去掉非字母数字再大写。套件指定 capability、expected_tool_call 与 expected_schema.required。`--recording` 选单文件，`--recordings` 选按别名命名的目录。",
+          "en": "Endpoint variables are `REGATLAS_<NAME>_BASE_URL`, `_API_KEY` and `_MODEL`, using the alias uppercased after removing non-alphanumerics. Suites specify capability, expected_tool_call and expected_schema.required. `--recording` selects one file; --recordings selects an alias-named directory."
+        }
+      }
+    ]
   },
+  "demo": {
+    "title": {
+      "zh": "实际运行结果",
+      "en": "Actual demo output"
+    },
+    "note": {
+      "zh": "从自带两份响应 fixture 回放六个任务。文件名中的模型标签仅是历史 fixture 名称，无法视为真实模型测量。百分号显示的是比例之差，应读作百分点变化。",
+      "en": "Replay six tasks from two shipped response fixtures. Model names in filenames are historical fixture labels, not verified model measurements. Percentage displays represent differences in rates and should be read as percentage-point changes."
+    },
+    "source": "https://github.com/SuperMarioYL/regatlas/blob/main/docs/demo-results.json",
+    "steps": [
+      {
+        "label": {
+          "zh": "生成差值图谱",
+          "en": "Generate the delta map"
+        },
+        "body": {
+          "zh": "得到六项任务的工具匹配与参数检查差值；未执行响应中命名的工具。",
+          "en": "Produce deltas for tool matching and argument checks across six tasks without executing named tools."
+        },
+        "command": ".venv/bin/python examples/presentation-demo.py",
+        "output": "## regatlas delta map\n\n**baseline-fixture → candidate-fixture** · suite `toolcalling` · 6 tasks across 1 capability.\n\n| Capability | tool-call Δ | refusal Δ | schema Δ | n |\n|---|---|---|---|---|\n| tool-calling | ✗ -33% | · 0% | ✗ +17% | 6 |\n\n<!-- raw DeltaMap JSON — the portable regression artifact -->\n```json\n{\n  \"tool-calling\": {\n    \"tool_call_success_delta\": -0.3333333333333333,\n    \"refusal_detected_delta\": 0.0,\n    \"schema_violation_delta\": 0.16666666666666666,\n    \"n_tasks\": 6\n  }\n}\n```\n",
+        "image": "/assets/presentation/demo-0-light.svg",
+        "imageDark": "/assets/presentation/demo-0-dark.svg"
+      }
+    ]
+  },
+  "quickstart": {
+    "title": {
+      "zh": "从完整输入开始",
+      "en": "Start with complete input"
+    },
+    "body": {
+      "zh": "需要 Python 3.12+ 与 uv。自带响应 fixture 可离线运行；真实回放需自行配置服务与密钥。",
+      "en": "Requires Python 3.12+ and uv. Response fixtures run offline; live replay requires a configured endpoint and key."
+    },
+    "steps": [
+      {
+        "title": {
+          "zh": "安装",
+          "en": "Install"
+        },
+        "code": "git clone https://github.com/SuperMarioYL/regatlas.git\ncd regatlas\nuv venv --python 3.12\nuv pip install --python .venv/bin/python -e ."
+      },
+      {
+        "title": {
+          "zh": "运行自带示例",
+          "en": "Run the supplied example"
+        },
+        "code": ".venv/bin/python examples/presentation-demo.py"
+      }
+    ]
+  },
+  "limitations": [
+    {
+      "zh": "规则信号不等于整体质量或安全性；拒答增加是否为回归取决于任务预期。",
+      "en": "Rule signals do not establish overall quality or safety; whether additional refusals are regressions depends on task expectations."
+    },
+    {
+      "zh": "本示例没有真实模型调用，不能用于给任何模型排名或声称其版本退化。",
+      "en": "The demo calls no real model and cannot rank models or establish a version regression."
+    }
+  ],
   "footer": {
-    "tag": { "zh": "模型版本回归归因 CLI · MIT 开源", "en": "Model-version regression-attribution CLI · MIT open source" }
+    "tag": "0.1.0 · Python 3.12+ · MIT"
   }
 }
