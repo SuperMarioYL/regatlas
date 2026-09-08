@@ -104,6 +104,10 @@
           "alt": {
             "zh": "从自带两份响应 fixture 回放六个任务。文件名中的模型标签仅是历史 fixture 名称，无法视为真实模型测量。百分号显示的是比例之差，应读作百分点变化。",
             "en": "Replay six tasks from two shipped response fixtures. Model names in filenames are historical fixture labels, not verified model measurements. Percentage displays represent differences in rates and should be read as percentage-point changes."
+          },
+          "mobile": {
+            "light": "/assets/presentation/process-mobile-light.svg",
+            "dark": "/assets/presentation/process-mobile-dark.svg"
           }
         }
       },
@@ -122,6 +126,10 @@
           "alt": {
             "zh": "suite 读取 YAML，replay 从服务或 RecordingClient 得到响应，breakage 计算信号并产出 Span。align 按 `(task_id, turn_idx)` 配对，delta 按 capability 聚合 candidate − baseline，report 输出 Markdown 与 JSON。这里的 signed delta 是带正负号的数值差，不是密码学签名。",
             "en": "suite loads YAML; replay receives service or RecordingClient responses; breakage computes signals and creates Spans. align pairs `(task_id, turn_idx)` and delta aggregates candidate minus baseline by capability. Reports contain Markdown and JSON. A signed delta is a positive or negative numeric difference, not a cryptographic signature."
+          },
+          "mobile": {
+            "light": "/assets/presentation/architecture-mobile-light.svg",
+            "dark": "/assets/presentation/architecture-mobile-dark.svg"
           }
         }
       },
@@ -140,6 +148,10 @@
           "alt": {
             "zh": "内置 toolcalling 与 refusal 两套任务。工具成功信号检查是否输出预期工具名，不执行那个工具；schema 检查 JSON 与 required 字段，不是完整 JSON Schema 验证。拒答由中英文词表检测。",
             "en": "The repository includes toolcalling and refusal suites. Tool success checks whether the expected tool name was emitted; it does not execute the tool. Schema checks cover JSON and required fields, not full JSON Schema validation. Refusal detection uses English and Chinese phrase lists."
+          },
+          "mobile": {
+            "light": "/assets/presentation/integrations-mobile-light.svg",
+            "dark": "/assets/presentation/integrations-mobile-dark.svg"
           }
         }
       }
