@@ -57,8 +57,9 @@ Complete inputs and execution steps are included in the commands above and the [
 .venv/bin/regatlas run --suite suites/toolcalling.yaml --models opus-4,opus-5 --recordings tests/fixtures
 .venv/bin/regatlas diff --from traj_opus-4.jsonl --to traj_opus-5.jsonl --out diff.json
 .venv/bin/regatlas report --diff diff.json --out atlas.md
+.venv/bin/regatlas export --diff diff.json --format langsmith --out runs.jsonl
 ```
-These commands still use fixtures. Live `replay --suite ... --model NAME` calls a service when --recording is absent. `run --out-dir` selects the trajectory directory; diff’s --baseline/--candidate alias source/target.
+These commands still use fixtures. Live `replay --suite ... --model NAME` calls a service when --recording is absent. `run --out-dir` selects the trajectory directory; diff’s --baseline/--candidate alias source/target; `export --format langsmith|langfuse|json` converts the diff into a trace-store import payload or the standalone DeltaMap JSON.
 
 ## Recorded demo
 
@@ -115,7 +116,7 @@ Endpoint variables are `REGATLAS_<NAME>_BASE_URL`, `_API_KEY` and `_MODEL`, usin
 
 ## Roadmap and scope
 
-Current capabilities cover single-turn suites, trajectory alignment and capability reports. Hosted scheduling, further export adapters, multi-turn analysis and richer validation remain future directions.
+Current capabilities cover single-turn suites, trajectory alignment, capability reports and export adapters (`export --format langsmith / langfuse / json`, landing delta maps in existing trace stores). Hosted scheduling, multi-turn analysis and richer validation remain future directions.
 
 - Rule signals do not establish overall quality or safety; whether additional refusals are regressions depends on task expectations.
 - The demo calls no real model and cannot rank models or establish a version regression.

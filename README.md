@@ -57,8 +57,9 @@ uv pip install --python .venv/bin/python -e .
 .venv/bin/regatlas run --suite suites/toolcalling.yaml --models opus-4,opus-5 --recordings tests/fixtures
 .venv/bin/regatlas diff --from traj_opus-4.jsonl --to traj_opus-5.jsonl --out diff.json
 .venv/bin/regatlas report --diff diff.json --out atlas.md
+.venv/bin/regatlas export --diff diff.json --format langsmith --out runs.jsonl
 ```
-这些命令仍使用 fixture。真实 `replay --suite ... --model NAME` 在没有 --recording 时调用服务。`run --out-dir` 控制轨迹目录；`diff --baseline/--candidate` 是来源/目标别名。
+这些命令仍使用 fixture。真实 `replay --suite ... --model NAME` 在没有 --recording 时调用服务。`run --out-dir` 控制轨迹目录；`diff --baseline/--candidate` 是来源/目标别名；`export --format langsmith|langfuse|json` 把 diff 转成轨迹存储导入负载或独立 DeltaMap JSON。
 
 ## 实际 Demo
 
@@ -115,7 +116,7 @@ $ .venv/bin/python examples/presentation-demo.py
 
 ## 路线图与范围
 
-当前提供单轮套件、轨迹对齐和能力报告。托管调度、更多导出适配器、多轮分析和更丰富的验证语义仍是后续方向。
+当前提供单轮套件、轨迹对齐、能力报告和导出适配器（`export --format langsmith / langfuse / json`，把 delta map 落进现有轨迹存储）。托管调度、多轮分析和更丰富的验证语义仍是后续方向。
 
 - 规则信号不等于整体质量或安全性；拒答增加是否为回归取决于任务预期。
 - 本示例没有真实模型调用，不能用于给任何模型排名或声称其版本退化。

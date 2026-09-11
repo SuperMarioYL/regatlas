@@ -1,16 +1,19 @@
-"""regatlas CLI — the three-subcommand regression-atlas surface.
+"""regatlas CLI — the regression-atlas surface.
 
     regatlas --list-models
     regatlas replay --suite suites/toolcalling.yaml --model opus-4 [--recording path] [--out traj.jsonl]
     regatlas run     --suite suites/toolcalling.yaml --models opus-4,opus-5 [--recordings dir]
     regatlas diff     --from traj_v4.jsonl --to traj_v5.jsonl [--out diff.json]
     regatlas report   --diff diff.json
+    regatlas export   --diff diff.json --format langsmith|langfuse|json [--out file]
 
 ``replay`` and ``run`` write JSONL trajectories; ``--recording`` / ``--recordings``
 switch to an offline fixture so demos and CI run without API keys. ``diff``
 accepts ``--from/--to`` or the ``--baseline/--candidate`` aliases, and resolves a
 bare model alias to its default ``traj_<alias>.jsonl`` file. ``report`` prints a
 markdown table plus the raw ``DeltaMap`` JSON so it can be pasted into a PR.
+``export`` converts the diff into a trace-store adapter payload or the
+standalone ``DeltaMap`` JSON artifact.
 """
 
 from __future__ import annotations
@@ -29,6 +32,7 @@ from rich.table import Table
 from regatlas import __version__
 from regatlas.align import SpanDiff, align_spans
 from regatlas.delta import aggregate, render_markdown
+from regatlas.export import export_json, export_langfuse, export_langsmith
 from regatlas.replay import (
     DEFAULT_MODELS,
     RecordingClient,
@@ -351,3 +355,43 @@ def report(
         sys.stdout.write(payload)
     else:
         Path(out).write_text(payload, encoding="utf-8")
+
+
+EXPORT_FORMATS: tuple[str, ...] = ("langsmith", "langfuse", "json")
+
+
+@app.command()
+def export(
+    diff_file: Path = typer.Option(
+        ..., "--diff", help="diff.json document produced by `regatlas diff`."
+    ),
+    fmt: str = typer.Option(
+        "langsmith",
+        "--format",
+        help="Export format: langsmith | langfuse | json.",
+    ),
+    out: Path | None = typer.Option(
+        None, "--out", help="Output file path (default: stdout)."
+    ),
+) -> None:
+    """Export a diff to a trace-store adapter (langsmith/langfuse) or standalone JSON."""
+    if fmt not in EXPORT_FORMATS:
+        raise typer.BadParameter(
+            f"unknown format {fmt!r}; expected one of: {', '.join(EXPORT_FORMATS)}"
+        )
+    _, span_diffs = _load_or_fail(
+        f"reading diff document {diff_file}", lambda: _load_diff_doc(diff_file)
+    )
+    if fmt == "langsmith":
+        payload = export_langsmith(span_diffs)
+    elif fmt == "langfuse":
+        payload = export_langfuse(span_diffs)
+    else:
+        payload = export_json(span_diffs)
+    if out is None or str(out) == "-":
+        sys.stdout.write(payload)
+    else:
+        Path(out).write_text(payload, encoding="utf-8")
+    err_console.print(
+        f"[dim]exported {len(span_diffs)} span pair(s) as {fmt}[/dim]"
+    )
