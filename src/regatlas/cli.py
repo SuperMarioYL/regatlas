@@ -17,10 +17,12 @@ from __future__ import annotations
 
 import json
 import sys
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any
+from typing import Any, TypeVar
 
 import typer
+import yaml
 from rich.console import Console
 from rich.table import Table
 
@@ -53,6 +55,34 @@ def _version_callback(value: bool) -> None:
     if value:
         console.print(f"regatlas {__version__}")
         raise typer.Exit()
+
+
+_T = TypeVar("_T")
+
+
+def _load_or_fail(action: str, loader: Callable[[], _T]) -> _T:
+    """Run an input loader, converting failures into the CLI error contract.
+
+    Bad user input — missing or unreadable files, malformed YAML/JSON/JSONL,
+    documents that fail schema validation — prints a one-line ``error:`` to
+    stderr and exits 2 (the same contract as the unconfigured-endpoint paths)
+    instead of leaking a raw traceback.
+    """
+    try:
+        return loader()
+    except (OSError, ValueError, yaml.YAMLError) as exc:
+        detail = str(exc).splitlines()[0].strip() or type(exc).__name__
+        err_console.print(f"[red]error:[/red] {action}: {detail}")
+        raise typer.Exit(code=2) from exc
+
+
+def _load_diff_doc(path: str | Path) -> tuple[dict[str, Any], list[SpanDiff]]:
+    """Read and validate a ``diff.json`` document produced by ``regatlas diff``."""
+    doc = json.loads(Path(path).read_text(encoding="utf-8"))
+    if not isinstance(doc, dict):
+        raise ValueError("diff document must be a JSON object")
+    span_diffs = [SpanDiff.model_validate(d) for d in doc.get("span_diffs", [])]
+    return doc, span_diffs
 
 
 def _print_models() -> None:
@@ -175,9 +205,14 @@ def replay(
 ) -> None:
     """Replay a suite against one model and emit a capability-tagged trajectory."""
     suite_path = _resolve_suite(suite)
-    loaded = load_suite(suite_path)
+    loaded = _load_or_fail(
+        f"loading suite {suite_path}", lambda: load_suite(suite_path)
+    )
     if recording is not None:
-        client: Any = RecordingClient.from_file(recording, model_version=model)
+        client: Any = _load_or_fail(
+            f"loading recording {recording}",
+            lambda: RecordingClient.from_file(recording, model_version=model),
+        )
     else:
         endpoint = resolve_endpoint(model)
         if not endpoint.configured:
@@ -213,7 +248,9 @@ def run(
 ) -> None:
     """Replay a suite for multiple models, writing one trajectory per model."""
     suite_path = _resolve_suite(suite)
-    loaded = load_suite(suite_path)
+    loaded = _load_or_fail(
+        f"loading suite {suite_path}", lambda: load_suite(suite_path)
+    )
     aliases = [m.strip() for m in models.split(",") if m.strip()]
     if not aliases:
         raise typer.BadParameter("no model aliases parsed from --models")
@@ -221,7 +258,10 @@ def run(
     for alias in aliases:
         if recordings is not None:
             rec = recordings / f"{alias}.responses.json"
-            client: Any = RecordingClient.from_file(rec, model_version=alias)
+            client: Any = _load_or_fail(
+                f"loading recording {rec}",
+                lambda: RecordingClient.from_file(rec, model_version=alias),
+            )
         else:
             endpoint = resolve_endpoint(alias)
             if not endpoint.configured:
@@ -254,8 +294,16 @@ def diff(
     ),
 ) -> None:
     """Align two trajectories and emit signed per-signal span deltas."""
-    from_spans = read_trajectory(_resolve_traj(from_path))
-    to_spans = read_trajectory(_resolve_traj(to_path))
+    from_path_resolved = _resolve_traj(from_path)
+    to_path_resolved = _resolve_traj(to_path)
+    from_spans = _load_or_fail(
+        f"reading trajectory {from_path_resolved}",
+        lambda: read_trajectory(from_path_resolved),
+    )
+    to_spans = _load_or_fail(
+        f"reading trajectory {to_path_resolved}",
+        lambda: read_trajectory(to_path_resolved),
+    )
     span_diffs = align_spans(from_spans, to_spans)
     from_model = from_spans[0].model_version if from_spans else None
     to_model = to_spans[0].model_version if to_spans else None
@@ -286,8 +334,9 @@ def report(
     ),
 ) -> None:
     """Aggregate a diff into a per-capability markdown delta map."""
-    doc = json.loads(Path(diff_file).read_text(encoding="utf-8"))
-    span_diffs = [SpanDiff.model_validate(d) for d in doc.get("span_diffs", [])]
+    doc, span_diffs = _load_or_fail(
+        f"reading diff document {diff_file}", lambda: _load_diff_doc(diff_file)
+    )
     delta_map = aggregate(span_diffs)
     total_tasks = sum(cap.n_tasks for cap in delta_map.values())
     markdown = render_markdown(
