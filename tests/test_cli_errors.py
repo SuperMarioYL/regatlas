@@ -18,13 +18,27 @@ from conftest import fixture_path, suite_path
 runner = CliRunner()
 
 
-def _stderr(result) -> str:
-    """Stderr with rich console line-wrapping collapsed for substring asserts."""
+def _stderr_compact(result) -> str:
+    """Stderr with all whitespace removed.
+
+    The rich console wraps error lines at the terminal width (80 on CI
+    runners) and can break inside a path or phrase, so assertions match
+    against whitespace-free text.
+    """
     try:
         text = result.stderr
     except ValueError:  # stderr merged into stdout on older click
         text = result.output
-    return re.sub(r"\s+", " ", text)
+    return re.sub(r"\s+", "", text)
+
+
+def _assert_err(result, *needles: str) -> None:
+    """Assert the error contract: exit 2, an error: line, no traceback."""
+    compact = _stderr_compact(result)
+    assert "error:" in compact
+    assert "Traceback" not in compact
+    for needle in needles:
+        assert re.sub(r"\s+", "", needle) in compact, needle
 
 
 def _replay_toolcalling(recording: Path, out: Path):
@@ -44,10 +58,7 @@ def test_replay_missing_recording_file(tmp_path: Path) -> None:
     missing = tmp_path / "nope.responses.json"
     result = _replay_toolcalling(missing, tmp_path / "t.jsonl")
     assert result.exit_code == 2
-    err = _stderr(result)
-    assert "error:" in err
-    assert "nope.responses.json" in err
-    assert "Traceback" not in err
+    _assert_err(result, "nope.responses.json")
 
 
 def test_replay_recording_not_an_object(tmp_path: Path) -> None:
@@ -55,10 +66,7 @@ def test_replay_recording_not_an_object(tmp_path: Path) -> None:
     rec.write_text('[{"a": 1}]', encoding="utf-8")
     result = _replay_toolcalling(rec, tmp_path / "t.jsonl")
     assert result.exit_code == 2
-    err = _stderr(result)
-    assert "error:" in err
-    assert "recording" in err
-    assert "Traceback" not in err
+    _assert_err(result, "recording")
 
 
 def test_replay_malformed_suite_yaml(tmp_path: Path) -> None:
@@ -77,10 +85,7 @@ def test_replay_malformed_suite_yaml(tmp_path: Path) -> None:
         ],
     )
     assert result.exit_code == 2
-    err = _stderr(result)
-    assert "error:" in err
-    assert "broken.yaml" in err
-    assert "Traceback" not in err
+    _assert_err(result, "broken.yaml")
 
 
 def test_run_missing_recordings_dir(tmp_path: Path) -> None:
@@ -94,16 +99,13 @@ def test_run_missing_recordings_dir(tmp_path: Path) -> None:
         ],
     )
     assert result.exit_code == 2
-    err = _stderr(result)
-    assert "error:" in err
-    assert "opus-4.responses.json" in err
-    assert "Traceback" not in err
+    _assert_err(result, "opus-4.responses.json")
 
 
 def test_diff_malformed_trajectory_line(tmp_path: Path) -> None:
     good = tmp_path / "traj_good.jsonl"
     ok = _replay_toolcalling(fixture_path("opus-4.responses.json"), good)
-    assert ok.exit_code == 0, _stderr(ok)
+    assert ok.exit_code == 0, _stderr_compact(ok)
 
     bad = tmp_path / "traj_bad.jsonl"
     bad.write_text('{"bad": "line"}\n', encoding="utf-8")
@@ -112,10 +114,7 @@ def test_diff_malformed_trajectory_line(tmp_path: Path) -> None:
         ["diff", "--from", str(bad), "--to", str(good)],
     )
     assert result.exit_code == 2
-    err = _stderr(result)
-    assert "error:" in err
-    assert "traj_bad.jsonl" in err
-    assert "Traceback" not in err
+    _assert_err(result, "traj_bad.jsonl")
 
 
 def test_report_missing_diff_file(tmp_path: Path) -> None:
@@ -123,10 +122,7 @@ def test_report_missing_diff_file(tmp_path: Path) -> None:
         app, ["report", "--diff", str(tmp_path / "nope-diff.json")]
     )
     assert result.exit_code == 2
-    err = _stderr(result)
-    assert "error:" in err
-    assert "nope-diff.json" in err
-    assert "Traceback" not in err
+    _assert_err(result, "nope-diff.json")
 
 
 def test_report_span_diffs_fail_validation(tmp_path: Path) -> None:
@@ -138,10 +134,7 @@ def test_report_span_diffs_fail_validation(tmp_path: Path) -> None:
     )
     result = runner.invoke(app, ["report", "--diff", str(doc)])
     assert result.exit_code == 2
-    err = _stderr(result)
-    assert "error:" in err
-    assert "invalid-span-diff.json" in err
-    assert "Traceback" not in err
+    _assert_err(result, "invalid-span-diff.json")
 
 
 def test_report_non_object_diff_doc(tmp_path: Path) -> None:
@@ -149,10 +142,7 @@ def test_report_non_object_diff_doc(tmp_path: Path) -> None:
     doc.write_text("[]", encoding="utf-8")
     result = runner.invoke(app, ["report", "--diff", str(doc)])
     assert result.exit_code == 2
-    err = _stderr(result)
-    assert "error:" in err
-    assert "JSON object" in err
-    assert "Traceback" not in err
+    _assert_err(result, "must be a JSON object")
 
 
 def test_report_missing_delta_keys_renders_as_not_applicable(tmp_path: Path) -> None:
@@ -168,5 +158,5 @@ def test_report_missing_delta_keys_renders_as_not_applicable(tmp_path: Path) -> 
     )
     result = runner.invoke(app, ["report", "--diff", str(doc)])
     assert result.exit_code == 0
-    assert "KeyError" not in _stderr(result)
+    assert "KeyError" not in _stderr_compact(result)
     assert "| c |" in result.stdout  # the row renders with em-dashes for N/A signals
