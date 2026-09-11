@@ -153,3 +153,20 @@ def test_report_non_object_diff_doc(tmp_path: Path) -> None:
     assert "error:" in err
     assert "JSON object" in err
     assert "Traceback" not in err
+
+
+def test_report_missing_delta_keys_renders_as_not_applicable(tmp_path: Path) -> None:
+    """v0.1.0 crashed with KeyError on a schema-valid doc with empty deltas."""
+    doc = tmp_path / "empty-deltas.json"
+    doc.write_text(
+        '{"from_model": "a", "to_model": "b", "suite": "s",'
+        ' "span_diffs": [{"task_id": "t1", "turn_idx": 0, "capability": "c",'
+        ' "from_breakage": {"refusal_detected": false, "schema_violation": false},'
+        ' "to_breakage": {"refusal_detected": false, "schema_violation": false},'
+        ' "deltas": {}}]}',
+        encoding="utf-8",
+    )
+    result = runner.invoke(app, ["report", "--diff", str(doc)])
+    assert result.exit_code == 0
+    assert "KeyError" not in _stderr(result)
+    assert "| c |" in result.stdout  # the row renders with em-dashes for N/A signals

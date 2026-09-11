@@ -3,7 +3,8 @@ from __future__ import annotations
 
 import json
 
-from regatlas.align import align_spans
+from regatlas.align import SpanDiff, align_spans
+from regatlas.breakage import Breakage
 from regatlas.delta import aggregate, render_markdown
 from regatlas.replay import RecordingClient, replay_suite
 from regatlas.suite import load_suite
@@ -47,6 +48,36 @@ def test_aggregate_refusal_deltas() -> None:
     # tool_call_success not applicable -> None
     assert cap.tool_call_success_delta is None
     assert cap.schema_violation_delta == 0.0
+
+
+def test_aggregate_missing_delta_keys_is_not_applicable() -> None:
+    """A schema-valid SpanDiff with partial/missing deltas keys must aggregate.
+
+    v0.1.0 crashed with KeyError('tool_call_success') here because aggregate()
+    indexed the keys directly; a hand-trimmed diff document is valid input.
+    """
+    no_keys = SpanDiff(
+        task_id="t1",
+        turn_idx=0,
+        capability="c",
+        from_breakage=Breakage(),
+        to_breakage=Breakage(),
+        deltas={},
+    )
+    partial = SpanDiff(
+        task_id="t2",
+        turn_idx=0,
+        capability="c",
+        from_breakage=Breakage(refusal_detected=False),
+        to_breakage=Breakage(refusal_detected=True),
+        deltas={"refusal_detected": 1},
+    )
+    dm = aggregate([no_keys, partial])
+    cap = dm["c"]
+    assert cap.n_tasks == 2
+    assert cap.tool_call_success_delta is None
+    assert cap.schema_violation_delta is None
+    assert cap.refusal_detected_delta == 1.0
 
 
 def test_render_markdown_contains_capability_and_deltas() -> None:

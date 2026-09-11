@@ -47,20 +47,23 @@ def aggregate(span_diffs: Iterable[SpanDiff]) -> DeltaMap:
     delta_map: DeltaMap = {}
     for capability, diffs in by_capability.items():
         n = len(diffs)
+        # A missing deltas key behaves like an explicit null (signal not
+        # applicable): it is excluded from that capability's mean rather than
+        # crashing — diff documents are hand-edited portable artifacts.
         tool_call = [
-            d.deltas["tool_call_success"]
+            value
             for d in diffs
-            if d.deltas["tool_call_success"] is not None
+            if (value := d.deltas.get("tool_call_success")) is not None
         ]
         refusal = [
-            d.deltas["refusal_detected"]
+            value
             for d in diffs
-            if d.deltas["refusal_detected"] is not None
+            if (value := d.deltas.get("refusal_detected")) is not None
         ]
         schema = [
-            d.deltas["schema_violation"]
+            value
             for d in diffs
-            if d.deltas["schema_violation"] is not None
+            if (value := d.deltas.get("schema_violation")) is not None
         ]
         delta_map[capability] = CapabilityDelta(
             tool_call_success_delta=_mean(tool_call) if tool_call else None,
