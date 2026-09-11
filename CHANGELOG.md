@@ -5,6 +5,35 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-09-11
+
+### Fixed
+- Bad input files no longer crash with a raw traceback and exit 1: missing or
+  unreadable recordings / diff documents / trajectory files, non-object
+  recording and diff documents, malformed suite YAML, and trajectory JSONL
+  that fails `Span` validation now print a one-line `error:` to stderr and
+  exit 2 across `replay`, `run`, `diff`, and `report` — matching the CLI's
+  existing unconfigured-endpoint error contract.
+- `regatlas report --diff` no longer raises `KeyError: 'tool_call_success'`
+  on a schema-valid diff document whose span `deltas` omit a signal key
+  (e.g. a hand-trimmed paste-into-PR artifact); missing keys now behave like
+  an explicit null — excluded from the capability mean and rendered as an
+  em-dash.
+
+### Added
+- `regatlas export --diff diff.json --format langsmith|langfuse|json` (v0.2
+  roadmap item "export adapters"): converts a diff document into a LangSmith
+  run-export JSONL (one run per span pair, one feedback entry per non-null
+  signed delta, deterministic ids), a Langfuse ingestion batch (one trace per
+  capability, one SPAN observation per span pair, score events for the
+  deltas), or the standalone `DeltaMap` JSON artifact identical to the block
+  `report` embeds in its markdown. All adapters emit offline static payloads.
+
+### Changed
+- Version lockstep bump to 0.2.0 across every surface: `VERSION`,
+  `pyproject.toml`, `regatlas.__version__` (drives `--version`), both README
+  hero lines, and `web/site.json` (`meta.content_version` and footer tag).
+
 ## [0.1.0] - 2026-08-15
 
 ### Added
@@ -33,3 +62,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   tag, opt-in PyPI trusted publishing), `demo.yml` (re-render the demo GIF).
 
 [0.1.0]: https://github.com/SuperMarioYL/regatlas/releases/tag/v0.1.0
+[0.2.0]: https://github.com/SuperMarioYL/regatlas/releases/tag/v0.2.0

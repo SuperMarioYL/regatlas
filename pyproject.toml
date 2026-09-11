@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "regatlas"
-version = "0.1.0"
+version = "0.2.0"
 description = "Model-version regression-attribution CLI — replay a fixed task-suite across model versions, align trajectories by span semantics, and map per-capability deltas via machine-checkable breakage signals."
 readme = "README.md"
 requires-python = ">=3.12"

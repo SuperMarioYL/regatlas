@@ -9,7 +9,7 @@
 
 **Replay fixed suites, align two trajectories and summarize changes in tool-call matching, refusal signals and argument checks by capability.**
 
-`v0.1.0` · `Python 3.12+` · [MIT](LICENSE)
+`v0.2.0` · `Python 3.12+` · [MIT](LICENSE)
 
 [Website](https://regatlas.lei6393.com) · [Demo record](docs/demo-results.json)
 

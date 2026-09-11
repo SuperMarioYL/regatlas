@@ -5,6 +5,6 @@ semantics, and map per-capability deltas via machine-checkable breakage
 signals, producing a per-capability regression atlas.
 """
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 __all__ = ["__version__"]

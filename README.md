@@ -9,7 +9,7 @@
 
 **回放固定套件，对齐两组轨迹，按能力汇总工具调用匹配、拒答词命中和参数检查的变化。**
 
-`v0.1.0` · `Python 3.12+` · [MIT](LICENSE)
+`v0.2.0` · `Python 3.12+` · [MIT](LICENSE)
 
 [Website](https://regatlas.lei6393.com) · [Demo record](docs/demo-results.json)
 
