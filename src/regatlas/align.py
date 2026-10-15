@@ -65,6 +65,28 @@ SIGNALS: tuple[str, ...] = (
 )
 
 
+def _index_spans(spans: Iterable[Span], side: str) -> dict[tuple[str, int], Span]:
+    """Index spans by ``(task_id, turn_idx)``, refusing duplicate keys.
+
+    A trajectory containing the same span key twice (e.g. two replay runs
+    concatenated into one file) makes pairing ambiguous: silently keeping one
+    span would discard the other — possibly one with contradicting breakage —
+    so the ambiguity is refused with a message naming the duplicate.
+    """
+    index: dict[tuple[str, int], Span] = {}
+    for span in spans:
+        key = (span.task_id, span.turn_idx)
+        if key in index:
+            raise ValueError(
+                f"duplicate span key (task_id={span.task_id!r}, "
+                f"turn_idx={span.turn_idx}) in the {side} trajectory — each "
+                "(task_id, turn_idx) must be unique; split concatenated runs "
+                "into separate files"
+            )
+        index[key] = span
+    return index
+
+
 def align_spans(
     from_spans: Iterable[Span],
     to_spans: Iterable[Span],
@@ -73,9 +95,10 @@ def align_spans(
 
     A span present on only one side is paired with an empty breakage so the
     delta still records the appearance/disappearance of a capability.
+    Duplicate span keys on either side raise ``ValueError``.
     """
-    from_index = {(s.task_id, s.turn_idx): s for s in from_spans}
-    to_index = {(s.task_id, s.turn_idx): s for s in to_spans}
+    from_index = _index_spans(from_spans, "from")
+    to_index = _index_spans(to_spans, "to")
     keys = sorted(set(from_index) | set(to_index))
 
     diffs: list[SpanDiff] = []

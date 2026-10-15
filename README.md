@@ -9,7 +9,7 @@
 
 **回放固定套件，对齐两组轨迹，按能力汇总工具调用匹配、拒答词命中和参数检查的变化。**
 
-`v0.2.0` · `Python 3.12+` · [MIT](LICENSE)
+`v0.3.0` · `Python 3.12+` · [MIT](LICENSE)
 
 [Website](https://regatlas.lei6393.com) · [Demo record](docs/demo-results.json)
 
@@ -103,20 +103,20 @@ $ .venv/bin/python examples/presentation-demo.py
   <source media="(max-width: 640px) and (prefers-color-scheme: dark)" srcset="assets/presentation/integrations-mobile-dark.svg">
   <source media="(max-width: 640px)" srcset="assets/presentation/integrations-mobile-light.svg">
   <source media="(prefers-color-scheme: dark)" srcset="assets/presentation/integrations-dark.svg">
-  <img src="assets/presentation/integrations-light.svg" width="1000" alt="内置 toolcalling 与 refusal 两套任务。工具成功信号检查是否输出预期工具名，不执行那个工具；schema 检查 JSON 与 required 字段，不是完整 JSON Schema 验证。拒答由中英文词表检测。">
+  <img src="assets/presentation/integrations-light.svg" width="1000" alt="内置 toolcalling 与 refusal 两套任务。工具成功信号检查是否输出预期工具名，不执行那个工具；schema 检查 JSON、required 字段与声明的属性类型/枚举，不是完整 JSON Schema 验证。拒答由中英文词表检测。">
 </picture>
 
-内置 toolcalling 与 refusal 两套任务。工具成功信号检查是否输出预期工具名，不执行那个工具；schema 检查 JSON 与 required 字段，不是完整 JSON Schema 验证。拒答由中英文词表检测。
+内置 toolcalling 与 refusal 两套任务。工具成功信号检查是否输出预期工具名，不执行那个工具；schema 检查 JSON、required 字段与声明的属性类型/枚举，不是完整 JSON Schema 验证。拒答由中英文词表检测。
 
 
 
 ## 配置
 
-端点变量为 `REGATLAS_<NAME>_BASE_URL`、`_API_KEY`、`_MODEL`，别名去掉非字母数字再大写。套件指定 capability、expected_tool_call 与 expected_schema.required。`--recording` 选单文件，`--recordings` 选按别名命名的目录。
+端点变量为 `REGATLAS_<NAME>_BASE_URL`、`_API_KEY`、`_MODEL`，别名去掉非字母数字再大写。套件指定 capability、expected_tool_call 与 `expected_schema`：除 `required` 必填键外，还可声明 `properties` 的 JSON 类型（`string` / `number` / `integer` / `boolean` / `object` / `array` / `null`）与逐属性 `enum`，例如 `expected_schema: { required: [location], properties: { location: { type: string } } }`。`--recording` 选单文件，`--recordings` 选按别名命名的目录。
 
 ## 路线图与范围
 
-当前提供单轮套件、轨迹对齐、能力报告和导出适配器（`export --format langsmith / langfuse / json`，把 delta map 落进现有轨迹存储）。托管调度、多轮分析和更丰富的验证语义仍是后续方向。
+当前提供单轮套件、轨迹对齐、能力报告、导出适配器（`export --format langsmith / langfuse / json`，把 delta map 落进现有轨迹存储）以及支持属性类型与枚举的 schema 校验。托管调度和多轮分析仍是后续方向。
 
 - 规则信号不等于整体质量或安全性；拒答增加是否为回归取决于任务预期。
 - 本示例没有真实模型调用，不能用于给任何模型排名或声称其版本退化。

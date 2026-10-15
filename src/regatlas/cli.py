@@ -80,12 +80,31 @@ def _load_or_fail(action: str, loader: Callable[[], _T]) -> _T:
         raise typer.Exit(code=2) from exc
 
 
+def _write_or_fail(action: str, writer: Callable[[], _T]) -> _T:
+    """Run an output writer, converting OSError into the CLI error contract.
+
+    An unwritable destination (--out under a missing directory, a read-only
+    path) is the same class of user-fixable mistake as a bad input path, so it
+    prints a one-line ``error:`` and exits 2 instead of a raw traceback.
+    """
+    try:
+        return writer()
+    except OSError as exc:
+        detail = str(exc).splitlines()[0].strip() or type(exc).__name__
+        err_console.print(f"[red]error:[/red] {action}: {detail}")
+        raise typer.Exit(code=2) from exc
+
+
 def _load_diff_doc(path: str | Path) -> tuple[dict[str, Any], list[SpanDiff]]:
     """Read and validate a ``diff.json`` document produced by ``regatlas diff``."""
     doc = json.loads(Path(path).read_text(encoding="utf-8"))
     if not isinstance(doc, dict):
         raise ValueError("diff document must be a JSON object")
-    span_diffs = [SpanDiff.model_validate(d) for d in doc.get("span_diffs", [])]
+    raw_span_diffs = doc.get("span_diffs", [])
+    if not isinstance(raw_span_diffs, list):
+        kind = "null" if raw_span_diffs is None else type(raw_span_diffs).__name__
+        raise ValueError(f"diff document field 'span_diffs' must be a list, got {kind}")
+    span_diffs = [SpanDiff.model_validate(d) for d in raw_span_diffs]
     return doc, span_diffs
 
 
@@ -186,12 +205,16 @@ def _resolve_traj(value: str) -> Path:
     )
 
 
-def _write_json(out: Path | None, doc: dict[str, Any]) -> None:
-    payload = json.dumps(doc, ensure_ascii=False, indent=2) + "\n"
+def _write_text(out: Path | None, payload: str) -> None:
+    """Write text to stdout (``out`` of None or ``-``) or to a file path."""
     if out is None or str(out) == "-":
         sys.stdout.write(payload)
     else:
         Path(out).write_text(payload, encoding="utf-8")
+
+
+def _write_json(out: Path | None, doc: dict[str, Any]) -> None:
+    _write_text(out, json.dumps(doc, ensure_ascii=False, indent=2) + "\n")
 
 
 @app.command()
@@ -228,7 +251,9 @@ def replay(
             raise typer.Exit(code=2)
         client = ReplayClient(endpoint)
     spans = replay_suite(loaded, client)
-    write_trajectory(out, spans)
+    _write_or_fail(
+        f"writing trajectory {out}", lambda: write_trajectory(out, spans)
+    )
     err_console.print(
         f"[dim]replayed {len(spans)} task(s) for '{model}' from "
         f"{suite_path}[/dim]"
@@ -258,7 +283,10 @@ def run(
     aliases = [m.strip() for m in models.split(",") if m.strip()]
     if not aliases:
         raise typer.BadParameter("no model aliases parsed from --models")
-    out_dir.mkdir(parents=True, exist_ok=True)
+    _write_or_fail(
+        f"creating output directory {out_dir}",
+        lambda: out_dir.mkdir(parents=True, exist_ok=True),
+    )
     for alias in aliases:
         if recordings is not None:
             rec = recordings / f"{alias}.responses.json"
@@ -278,7 +306,9 @@ def run(
             client = ReplayClient(endpoint)
         spans = replay_suite(loaded, client)
         dest = out_dir / f"traj_{alias}.jsonl"
-        write_trajectory(dest, spans)
+        _write_or_fail(
+            f"writing trajectory {dest}", lambda: write_trajectory(dest, spans)
+        )
         err_console.print(f"wrote {dest} ({len(spans)} spans)")
 
 
@@ -308,7 +338,10 @@ def diff(
         f"reading trajectory {to_path_resolved}",
         lambda: read_trajectory(to_path_resolved),
     )
-    span_diffs = align_spans(from_spans, to_spans)
+    span_diffs = _load_or_fail(
+        f"aligning trajectories {from_path_resolved} -> {to_path_resolved}",
+        lambda: align_spans(from_spans, to_spans),
+    )
     from_model = from_spans[0].model_version if from_spans else None
     to_model = to_spans[0].model_version if to_spans else None
     suite_label = suite_name
@@ -321,7 +354,7 @@ def diff(
         "suite": suite_label,
         "span_diffs": [d.model_dump() for d in span_diffs],
     }
-    _write_json(out, doc)
+    _write_or_fail(f"writing diff {out}", lambda: _write_json(out, doc))
     err_console.print(
         f"[dim]aligned {len(span_diffs)} span pair(s): "
         f"{from_model} -> {to_model}[/dim]"
@@ -351,10 +384,7 @@ def report(
         total_tasks=total_tasks,
     )
     payload = markdown + "\n"
-    if out is None or str(out) == "-":
-        sys.stdout.write(payload)
-    else:
-        Path(out).write_text(payload, encoding="utf-8")
+    _write_or_fail(f"writing report {out}", lambda: _write_text(out, payload))
 
 
 EXPORT_FORMATS: tuple[str, ...] = ("langsmith", "langfuse", "json")
@@ -388,10 +418,9 @@ def export(
         payload = export_langfuse(span_diffs)
     else:
         payload = export_json(span_diffs)
-    if out is None or str(out) == "-":
-        sys.stdout.write(payload)
-    else:
-        Path(out).write_text(payload, encoding="utf-8")
+    _write_or_fail(
+        f"writing export {out}", lambda: _write_text(out, payload)
+    )
     err_console.print(
         f"[dim]exported {len(span_diffs)} span pair(s) as {fmt}[/dim]"
     )

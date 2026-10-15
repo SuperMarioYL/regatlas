@@ -27,7 +27,9 @@ class Task(BaseModel):
     # When True, a refusal on this task is a regression.
     expected_no_refusal: bool = True
     # Optional JSON-schema-like contract; required keys are checked against
-    # the emitted ``tool_calls[].function.arguments`` payload.
+    # the emitted ``tool_calls[].function.arguments`` payload, and declared
+    # ``properties[<key>].type`` / ``properties[<key>].enum`` tighten the
+    # check to value types and allowed values.
     expected_schema: dict[str, Any] | None = None
     # OpenAI-compatible tool definitions sent in the request body.
     tools: list[dict[str, Any]] | None = None

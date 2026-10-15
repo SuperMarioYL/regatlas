@@ -1,6 +1,8 @@
 """Tests for span alignment and signed deltas (milestone m2)."""
 from __future__ import annotations
 
+import pytest
+
 from regatlas.align import align_spans, signed_delta
 from regatlas.breakage import Breakage
 from regatlas.replay import RecordingClient, replay_suite
@@ -64,6 +66,25 @@ def test_align_refusal_delta_polarity() -> None:
     # False -> True = +1 (regression, refusal rose)
     assert diffs[0].deltas["refusal_detected"] == 1
     assert diffs[0].deltas["schema_violation"] == 0
+
+
+def test_align_duplicate_span_keys_raise() -> None:
+    """v0.2.0 silently kept the last span; contradicting evidence vanished."""
+    first = _span("t1", "tool-calling", Breakage(tool_call_success=True), model="a")
+    second = _span("t1", "tool-calling", Breakage(tool_call_success=False), model="a")
+    to_spans = [_span("t1", "tool-calling", Breakage(tool_call_success=True), model="b")]
+
+    with pytest.raises(ValueError, match="t1"):
+        align_spans([first, second], to_spans)
+    with pytest.raises(ValueError, match="duplicate"):
+        align_spans([first], [to_spans[0], second])
+
+
+def test_align_identical_duplicates_still_refused() -> None:
+    """Even byte-identical duplicates are refused: ambiguity has no honest merge."""
+    span = _span("t1", "tool-calling", Breakage(tool_call_success=True), model="a")
+    with pytest.raises(ValueError, match="duplicate span key"):
+        align_spans([span, span], [])
 
 
 def test_align_on_bundled_toolcalling_fixture() -> None:

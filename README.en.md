@@ -9,7 +9,7 @@
 
 **Replay fixed suites, align two trajectories and summarize changes in tool-call matching, refusal signals and argument checks by capability.**
 
-`v0.2.0` · `Python 3.12+` · [MIT](LICENSE)
+`v0.3.0` · `Python 3.12+` · [MIT](LICENSE)
 
 [Website](https://regatlas.lei6393.com) · [Demo record](docs/demo-results.json)
 
@@ -103,20 +103,20 @@ $ .venv/bin/python examples/presentation-demo.py
   <source media="(max-width: 640px) and (prefers-color-scheme: dark)" srcset="assets/presentation/integrations-mobile-dark.svg">
   <source media="(max-width: 640px)" srcset="assets/presentation/integrations-mobile-light.svg">
   <source media="(prefers-color-scheme: dark)" srcset="assets/presentation/integrations-dark.svg">
-  <img src="assets/presentation/integrations-light.svg" width="1000" alt="The repository includes toolcalling and refusal suites. Tool success checks whether the expected tool name was emitted; it does not execute the tool. Schema checks cover JSON and required fields, not full JSON Schema validation. Refusal detection uses English and Chinese phrase lists.">
+  <img src="assets/presentation/integrations-light.svg" width="1000" alt="The repository includes toolcalling and refusal suites. Tool success checks whether the expected tool name was emitted; it does not execute the tool. Schema checks cover JSON, required fields and declared property types/enums, not full JSON Schema validation. Refusal detection uses English and Chinese phrase lists.">
 </picture>
 
-The repository includes toolcalling and refusal suites. Tool success checks whether the expected tool name was emitted; it does not execute the tool. Schema checks cover JSON and required fields, not full JSON Schema validation. Refusal detection uses English and Chinese phrase lists.
+The repository includes toolcalling and refusal suites. Tool success checks whether the expected tool name was emitted; it does not execute the tool. Schema checks cover JSON, required fields and declared property types/enums, not full JSON Schema validation. Refusal detection uses English and Chinese phrase lists.
 
 
 
 ## Configuration
 
-Endpoint variables are `REGATLAS_<NAME>_BASE_URL`, `_API_KEY` and `_MODEL`, using the alias uppercased after removing non-alphanumerics. Suites specify capability, expected_tool_call and expected_schema.required. `--recording` selects one file; --recordings selects an alias-named directory.
+Endpoint variables are `REGATLAS_<NAME>_BASE_URL`, `_API_KEY` and `_MODEL`, using the alias uppercased after removing non-alphanumerics. Suites specify capability, expected_tool_call and `expected_schema` — `required` keys, and optionally `properties` with JSON types (`string` / `number` / `integer` / `boolean` / `object` / `array` / `null`) plus per-property `enum` lists, e.g. `expected_schema: { required: [location], properties: { location: { type: string } } }`. `--recording` selects one file; --recordings selects an alias-named directory.
 
 ## Roadmap and scope
 
-Current capabilities cover single-turn suites, trajectory alignment, capability reports and export adapters (`export --format langsmith / langfuse / json`, landing delta maps in existing trace stores). Hosted scheduling, multi-turn analysis and richer validation remain future directions.
+Current capabilities cover single-turn suites, trajectory alignment, capability reports, export adapters (`export --format langsmith / langfuse / json`, landing delta maps in existing trace stores) and schema validation with property types and enums. Hosted scheduling and multi-turn analysis remain future directions.
 
 - Rule signals do not establish overall quality or safety; whether additional refusals are regressions depends on task expectations.
 - The demo calls no real model and cannot rank models or establish a version regression.

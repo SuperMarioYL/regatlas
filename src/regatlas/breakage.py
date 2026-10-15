@@ -119,6 +119,35 @@ def detect_tool_call_success(
     return expected_tool_call in emitted
 
 
+_JSON_TYPES: dict[str, tuple[type, ...] | None] = {
+    "string": (str,),
+    "number": (int, float),
+    "integer": (int,),
+    "boolean": (bool,),
+    "object": (dict,),
+    "array": (list,),
+    "null": None,  # checked as `value is None`, not isinstance
+}
+
+
+def _value_matches_type(value: Any, declared: str) -> bool:
+    """True if ``value`` has the declared JSON type.
+
+    ``boolean`` is checked before the numeric types so JSON ``true``/``false``
+    never satisfy ``number``/``integer`` (bool is an int subclass in Python);
+    ``null`` is the JSON ``None``.
+    """
+    if declared == "null":
+        return value is None
+    expected = _JSON_TYPES.get(declared)
+    if expected is None:
+        return True  # unknown type name: not checkable, not a violation
+    if declared in ("number", "integer"):
+        if isinstance(value, bool):
+            return False
+    return isinstance(value, expected)
+
+
 def detect_schema_violation(
     tool_calls: list[dict[str, Any]] | None,
     expected_tool_call: str | None,
@@ -132,16 +161,29 @@ def detect_schema_violation(
     checked. A violation is raised when:
 
     * ``arguments`` is a non-empty string that is not valid JSON, or
-    * the parsed value is not an object while required keys are declared, or
-    * a declared required key is absent from the parsed object.
+    * the parsed value is not an object while required keys or property
+      checks are declared, or
+    * a declared required key is absent from the parsed object, or
+    * a declared ``properties[<key>].type`` contradicts the parsed value's
+      JSON type (``string`` / ``number`` / ``integer`` / ``boolean`` /
+      ``object`` / ``array`` / ``null``; JSON Schema semantics: ``integer``
+      accepts only ints, ``number`` accepts int or float, ``boolean`` never
+      satisfies a numeric type), or
+    * a declared ``properties[<key>].enum`` list omits the parsed value.
 
     A wrong-tool call (no name match) is *not* a schema violation here — that
     failure is captured by ``tool_call_success`` so each signal stays
-    attributable to one cause.
+    attributable to one cause. Property and enum checks are opt-in: a suite
+    that declares only ``required`` (or no schema at all) behaves exactly as
+    before.
     """
     if not tool_calls or not expected_schema:
         return False
     required: list[str] = list(expected_schema.get("required", []) or [])
+    raw_properties = expected_schema.get("properties")
+    properties: dict[str, Any] = (
+        raw_properties if isinstance(raw_properties, dict) else {}
+    )
     targets: list[dict[str, Any]] = []
     if expected_tool_call is not None:
         targets = [
@@ -161,11 +203,24 @@ def detect_schema_violation(
             parsed = json.loads(raw) if isinstance(raw, str) else raw
         except (json.JSONDecodeError, TypeError):
             return True
-        if required:
-            if not isinstance(parsed, dict):
-                return True
+        if required and not isinstance(parsed, dict):
+            return True
+        if properties and not isinstance(parsed, dict):
+            return True
+        if isinstance(parsed, dict):
             for key in required:
                 if key not in parsed:
+                    return True
+            for key, prop in properties.items():
+                if not isinstance(prop, dict) or key not in parsed:
+                    continue
+                declared = prop.get("type")
+                if isinstance(declared, str) and not _value_matches_type(
+                    parsed[key], declared
+                ):
+                    return True
+                allowed = prop.get("enum")
+                if isinstance(allowed, list) and parsed[key] not in allowed:
                     return True
     return False
 

@@ -90,6 +90,96 @@ def test_schema_violation_no_schema_declared_is_false() -> None:
     assert detect_schema_violation(calls, "x", None) is False
 
 
+# --- richer validation semantics: properties type checks + enum -----------
+
+def _call(args: str) -> list[dict]:
+    return [{"function": {"name": "get_weather", "arguments": args}}]
+
+
+def test_schema_properties_type_match_is_not_violation() -> None:
+    schema = {"properties": {"location": {"type": "string"}}}
+    assert detect_schema_violation(_call('{"location":"Beijing"}'), "get_weather", schema) is False
+
+
+def test_schema_properties_type_mismatch_is_violation() -> None:
+    schema = {"properties": {"location": {"type": "string"}}}
+    assert detect_schema_violation(_call('{"location":123}'), "get_weather", schema) is True
+
+
+def test_schema_integer_rejects_float_and_number_accepts_int() -> None:
+    schema_int = {"properties": {"count": {"type": "integer"}}}
+    assert detect_schema_violation(_call('{"count":1.5}'), "get_weather", schema_int) is True
+    assert detect_schema_violation(_call('{"count":2}'), "get_weather", schema_int) is False
+    schema_num = {"properties": {"ratio": {"type": "number"}}}
+    assert detect_schema_violation(_call('{"ratio":2}'), "get_weather", schema_num) is False
+
+
+def test_schema_boolean_never_satisfies_numeric_type() -> None:
+    schema = {"properties": {"count": {"type": "number"}}}
+    assert detect_schema_violation(_call('{"count":true}'), "get_weather", schema) is True
+
+
+def test_schema_object_array_null_types() -> None:
+    schema = {"properties": {"opts": {"type": "object"}, "tags": {"type": "array"}}}
+    ok = '{"opts":{"a":1},"tags":["x"]}'
+    assert detect_schema_violation(_call(ok), "get_weather", schema) is False
+    assert detect_schema_violation(_call('{"opts":null,"tags":"x"}'), "get_weather", schema) is True
+    schema_null = {"properties": {"opts": {"type": "null"}}}
+    assert detect_schema_violation(_call('{"opts":null}'), "get_weather", schema_null) is False
+
+
+def test_schema_enum_hit_and_miss() -> None:
+    schema = {"properties": {"unit": {"type": "string", "enum": ["c", "f"]}}}
+    assert detect_schema_violation(_call('{"unit":"c"}'), "get_weather", schema) is False
+    assert detect_schema_violation(_call('{"unit":"k"}'), "get_weather", schema) is True
+
+
+def test_schema_properties_undeclared_keys_and_missing_keys_ignored() -> None:
+    """Extra keys are allowed and absent keys stay a `required` concern."""
+    schema = {"properties": {"location": {"type": "string"}}}
+    assert detect_schema_violation(_call('{"other":true}'), "get_weather", schema) is False
+    assert detect_schema_violation(_call("{}"), "get_weather", schema) is False
+
+
+def test_schema_required_only_behavior_unchanged() -> None:
+    """Backward compatibility: required-only suites behave exactly as before."""
+    schema = {"required": ["location"]}
+    assert detect_schema_violation(_call('{"location":123}'), "get_weather", schema) is False
+    assert detect_schema_violation(_call("{}"), "get_weather", schema) is True
+
+
+def test_schema_properties_non_object_arguments_is_violation() -> None:
+    schema = {"properties": {"location": {"type": "string"}}}
+    assert detect_schema_violation(_call('"just a string"'), "get_weather", schema) is True
+
+
+def test_schema_type_mismatch_flows_through_pipeline() -> None:
+    """A type-mismatched argument becomes a +1 schema delta through align."""
+    from regatlas.align import align_spans
+    from regatlas.trajectory import Response, Span
+
+    suite_task = _task(
+        expected_tool_call="get_weather",
+        expected_schema={"properties": {"location": {"type": "string"}}},
+    )
+    good_resp = {"content": None, "tool_calls": _call('{"location":"Beijing"}')}
+    bad_resp = {"content": None, "tool_calls": _call('{"location":123}')}
+    good_br = compute_breakage(suite_task, good_resp)
+    bad_br = compute_breakage(suite_task, bad_resp)
+    assert good_br.schema_violation is False
+    assert bad_br.schema_violation is True
+
+    def _span(br, model):
+        return Span(
+            run_id="r", model_version=model, task_id="x", turn_idx=0,
+            capability="tool-calling", request={}, response=Response(),
+            breakage=br,
+        )
+
+    diffs = align_spans([_span(good_br, "a")], [_span(bad_br, "b")])
+    assert diffs[0].deltas["schema_violation"] == 1
+
+
 # --- compute_breakage integration ----------------------------------------
 
 def test_compute_breakage_correct_tool_call() -> None:

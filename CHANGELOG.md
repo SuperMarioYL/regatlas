@@ -5,6 +5,38 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-10-16
+
+### Fixed
+- `regatlas report --diff` and `regatlas export --diff` no longer crash with a
+  raw `TypeError` traceback (exit 1) on a diff document whose `span_diffs` is
+  an explicit `null` or any other non-list JSON value; the document is now
+  rejected with a one-line `error:` naming the field and exit 2, matching the
+  v0.2.0 error contract. A *missing* `span_diffs` key still renders an empty
+  atlas intentionally.
+- Output-path failures no longer leak tracebacks: `replay --out`, `run
+  --out-dir`, `diff --out`, `report --out`, and `export --out` under a missing
+  or unwritable directory now print a one-line `error:` naming the destination
+  and exit 2 instead of a raw `FileNotFoundError` traceback (exit 1).
+- `regatlas diff` no longer silently aligns duplicate spans last-wins: a
+  trajectory containing two spans with the same `(task_id, turn_idx)` — e.g.
+  two replay runs concatenated into one file — now fails with a clean error
+  naming the duplicated key and exit 2, instead of silently discarding a span
+  that could carry contradicting breakage evidence.
+
+### Added
+- Richer validation semantics for `expected_schema` (README roadmap direction):
+  suites may now declare `properties` with JSON types (`string`, `number`,
+  `integer`, `boolean`, `object`, `array`, `null`) and per-property `enum`
+  lists, and the `schema_violation` detector flags arguments whose parsed
+  values contradict them. Strictly opt-in — suites declaring only `required`
+  (all bundled suites) behave exactly as before.
+
+### Changed
+- Version lockstep bump to 0.3.0 across every surface: `VERSION`,
+  `pyproject.toml`, `regatlas.__version__` (drives `--version`), both README
+  hero lines, and `web/site.json` (`meta.content_version` and footer tag).
+
 ## [0.2.0] - 2026-09-11
 
 ### Fixed
@@ -63,3 +95,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 [0.1.0]: https://github.com/SuperMarioYL/regatlas/releases/tag/v0.1.0
 [0.2.0]: https://github.com/SuperMarioYL/regatlas/releases/tag/v0.2.0
+[0.3.0]: https://github.com/SuperMarioYL/regatlas/releases/tag/v0.3.0
