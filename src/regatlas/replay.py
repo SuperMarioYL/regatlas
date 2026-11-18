@@ -25,7 +25,7 @@ from pathlib import Path
 from typing import Any, Protocol
 
 import httpx
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from regatlas.breakage import Breakage, compute_breakage
 from regatlas.suite import Suite, Task
@@ -144,10 +144,31 @@ class RecordingClient:
 
     @classmethod
     def from_file(cls, path: str | Path, model_version: str) -> "RecordingClient":
+        """Load a recording fixture, validating every entry's shape.
+
+        A fixture whose value is not an object (or whose ``content`` /
+        ``tool_calls`` have the wrong type) is malformed *input*, not a model
+        response: accepting it would turn every task into an error span and
+        misattribute the malformed file to a model regression. Raise ValueError
+        so the CLI's input-error contract reports it and exits 2.
+        """
         with Path(path).open("r", encoding="utf-8") as fh:
             data = json.load(fh)
         if not isinstance(data, dict):
             raise ValueError(f"recording file {path} must be a JSON object keyed by task_id")
+        for task_id, entry in data.items():
+            if not isinstance(entry, dict):
+                raise ValueError(
+                    f"recording file {path} entry for task {task_id!r} must be "
+                    f"a JSON object, got {type(entry).__name__}"
+                )
+            try:
+                Response.model_validate(entry)
+            except ValidationError as exc:
+                raise ValueError(
+                    f"recording file {path} entry for task {task_id!r} is "
+                    f"invalid: {exc.errors()[0]['msg']}"
+                ) from exc
         return cls(data, model_version=model_version)
 
     def complete(self, task: Task) -> dict[str, Any]:

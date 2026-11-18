@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import json
 
+import pytest
+
 from regatlas.replay import (
     RecordingClient,
     env_name,
@@ -87,6 +89,31 @@ def test_recording_client_missing_task_raises() -> None:
     except KeyError:
         return
     raise AssertionError("expected KeyError for missing task")
+
+
+# --- recording entry shape is validated at load (v0.4.0) ------------------
+
+def test_recording_client_rejects_non_object_entry(tmp_path) -> None:
+    """v0.3.0 accepted this, then every span became an AttributeError span."""
+    rec = tmp_path / "bad.responses.json"
+    rec.write_text('{"t1": "not-a-dict"}', encoding="utf-8")
+    with pytest.raises(ValueError, match=r"task 't1'.*JSON object"):
+        RecordingClient.from_file(rec, model_version="opus-4")
+
+
+def test_recording_client_rejects_wrong_typed_tool_calls(tmp_path) -> None:
+    rec = tmp_path / "bad.responses.json"
+    rec.write_text('{"t1": {"tool_calls": "not-a-list"}}', encoding="utf-8")
+    with pytest.raises(ValueError, match="t1"):
+        RecordingClient.from_file(rec, model_version="opus-4")
+
+
+def test_recording_client_accepts_shipped_fixture() -> None:
+    client = RecordingClient.from_file(
+        fixture_path("opus-4.responses.json"), model_version="opus-4"
+    )
+    assert client.complete(_suite().tasks[0])["tool_calls"]
+
 
 
 def test_replay_suite_produces_capability_tagged_spans() -> None:

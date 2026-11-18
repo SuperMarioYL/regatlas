@@ -26,11 +26,12 @@ from typing import Any, TypeVar
 
 import typer
 import yaml
+from pydantic import ValidationError
 from rich.console import Console
 from rich.table import Table
 
 from regatlas import __version__
-from regatlas.align import SpanDiff, align_spans
+from regatlas.align import SIGNALS, SpanDiff, align_spans
 from regatlas.delta import aggregate, render_markdown
 from regatlas.export import export_json, export_langfuse, export_langsmith
 from regatlas.replay import (
@@ -64,6 +65,24 @@ def _version_callback(value: bool) -> None:
 _T = TypeVar("_T")
 
 
+def _error_detail(exc: Exception) -> str:
+    """Collapse an exception into one line, keeping a pydantic field path.
+
+    pydantic's ``str()`` starts with a generic ``N validation error(s) for
+    Model`` line, which hides the offending field; the first error's ``loc``
+    and message are the actionable part, so they become the one-line detail.
+    """
+    if isinstance(exc, ValidationError):
+        first = exc.errors()[0]
+        loc = ".".join(str(part) for part in first.get("loc", ()))
+        msg = str(first.get("msg", "")).strip()
+        if loc and msg:
+            return f"{loc}: {msg}"
+        if msg:
+            return msg
+    return str(exc).splitlines()[0].strip() or type(exc).__name__
+
+
 def _load_or_fail(action: str, loader: Callable[[], _T]) -> _T:
     """Run an input loader, converting failures into the CLI error contract.
 
@@ -75,8 +94,7 @@ def _load_or_fail(action: str, loader: Callable[[], _T]) -> _T:
     try:
         return loader()
     except (OSError, ValueError, yaml.YAMLError) as exc:
-        detail = str(exc).splitlines()[0].strip() or type(exc).__name__
-        err_console.print(f"[red]error:[/red] {action}: {detail}")
+        err_console.print(f"[red]error:[/red] {action}: {_error_detail(exc)}")
         raise typer.Exit(code=2) from exc
 
 
@@ -90,9 +108,30 @@ def _write_or_fail(action: str, writer: Callable[[], _T]) -> _T:
     try:
         return writer()
     except OSError as exc:
-        detail = str(exc).splitlines()[0].strip() or type(exc).__name__
-        err_console.print(f"[red]error:[/red] {action}: {detail}")
+        err_console.print(f"[red]error:[/red] {action}: {_error_detail(exc)}")
         raise typer.Exit(code=2) from exc
+
+
+_SIGNED_DELTA_VALUES = frozenset({-1, 0, 1})
+
+
+def _validate_delta_contract(span_diffs: list[SpanDiff]) -> None:
+    """Refuse signed deltas outside the documented {-1, 0, +1, null} range.
+
+    A diff document is the portable, hand-editable artifact; an out-of-range
+    value would aggregate into an impossible percentage (e.g. +700%) and can
+    flip the regression marker. Only the three known signals are checked —
+    unknown ``deltas`` keys are left for aggregation to ignore.
+    """
+    for diff in span_diffs:
+        for signal in SIGNALS:
+            value = diff.deltas.get(signal)
+            if value is not None and value not in _SIGNED_DELTA_VALUES:
+                raise ValueError(
+                    f"diff document span (task_id={diff.task_id!r}, "
+                    f"turn_idx={diff.turn_idx}) signal {signal!r} has delta "
+                    f"{value!r}; must be -1, 0, 1, or null"
+                )
 
 
 def _load_diff_doc(path: str | Path) -> tuple[dict[str, Any], list[SpanDiff]]:
@@ -105,6 +144,7 @@ def _load_diff_doc(path: str | Path) -> tuple[dict[str, Any], list[SpanDiff]]:
         kind = "null" if raw_span_diffs is None else type(raw_span_diffs).__name__
         raise ValueError(f"diff document field 'span_diffs' must be a list, got {kind}")
     span_diffs = [SpanDiff.model_validate(d) for d in raw_span_diffs]
+    _validate_delta_contract(span_diffs)
     return doc, span_diffs
 
 

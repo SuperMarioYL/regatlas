@@ -5,6 +5,37 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-11-19
+
+### Fixed
+- `expected_schema` is now validated when a suite loads. A scalar `required`
+  (which v0.3.0 expanded into single-character keys, flagging every valid
+  response as a `schema_violation`), a non-string required entry, a property
+  spec that is not a mapping, an unknown property `type` name, and a non-list
+  `enum` now print one `error:` line naming `expected_schema` and exit 2.
+  Previously an unknown type silently disabled the declared check.
+- A recording fixture entry that is not a JSON object (or whose `content` /
+  `tool_calls` has the wrong type) is rejected at load with exit 2. v0.3.0
+  accepted it, turned every task into an error span, and exited 0 with a
+  trajectory reporting `tool_call_success: false` — malformed input was
+  misattributed to a model regression.
+- `expected_no_refusal` now gates the refusal signal as documented: a task
+  that permits or expects a refusal no longer reports `refusal_detected: true`
+  and therefore no +1 refusal regression. Bundled suites declare `true`, so
+  the recorded demo numbers are unchanged.
+- A diff document carrying a signed delta outside `{-1, 0, +1, null}` is
+  rejected with a one-line `error:` and exit 2. v0.3.0 rendered a hand-edited
+  value of `7` as `✓ +700%` and embedded `7.0` in the DeltaMap JSON.
+- Pydantic validation errors surfaced through the CLI now name the offending
+  field path (`tasks.0.expected_schema: ...`) instead of only the generic
+  "N validation errors for Suite" line.
+
+### Changed
+- Version lockstep bump to 0.4.0 across every surface: `VERSION`,
+  `pyproject.toml`, `regatlas.__version__` (drives `--version`), both README
+  hero lines, and `web/site.json` (`meta.content_version` and footer tag).
+  README and site prose now describe the released validation behavior.
+
 ## [0.3.0] - 2026-10-16
 
 ### Fixed
@@ -96,3 +127,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [0.1.0]: https://github.com/SuperMarioYL/regatlas/releases/tag/v0.1.0
 [0.2.0]: https://github.com/SuperMarioYL/regatlas/releases/tag/v0.2.0
 [0.3.0]: https://github.com/SuperMarioYL/regatlas/releases/tag/v0.3.0
+[0.4.0]: https://github.com/SuperMarioYL/regatlas/releases/tag/v0.4.0

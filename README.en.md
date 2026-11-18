@@ -9,7 +9,7 @@
 
 **Replay fixed suites, align two trajectories and summarize changes in tool-call matching, refusal signals and argument checks by capability.**
 
-`v0.3.0` · `Python 3.12+` · [MIT](LICENSE)
+`v0.4.0` · `Python 3.12+` · [MIT](LICENSE)
 
 [Website](https://regatlas.lei6393.com) · [Demo record](docs/demo-results.json)
 
@@ -112,13 +112,13 @@ The repository includes toolcalling and refusal suites. Tool success checks whet
 
 ## Configuration
 
-Endpoint variables are `REGATLAS_<NAME>_BASE_URL`, `_API_KEY` and `_MODEL`, using the alias uppercased after removing non-alphanumerics. Suites specify capability, expected_tool_call and `expected_schema` — `required` keys, and optionally `properties` with JSON types (`string` / `number` / `integer` / `boolean` / `object` / `array` / `null`) plus per-property `enum` lists, e.g. `expected_schema: { required: [location], properties: { location: { type: string } } }`. `--recording` selects one file; --recordings selects an alias-named directory.
+Endpoint variables are `REGATLAS_<NAME>_BASE_URL`, `_API_KEY` and `_MODEL`, using the alias uppercased after removing non-alphanumerics. Suites specify capability, expected_tool_call and `expected_schema` — `required` keys, and optionally `properties` with JSON types (`string` / `number` / `integer` / `boolean` / `object` / `array` / `null`) plus per-property `enum` lists, e.g. `expected_schema: { required: [location], properties: { location: { type: string } } }`. `expected_schema` is validated when the suite loads: `required` must be a list of strings, each `properties` value must be a mapping, `type` must be one of the JSON types above, and `enum` must be a list — a typo fails with a clean error instead of silently disabling a check. Set `expected_no_refusal: false` on a task where a refusal is acceptable or expected; the refusal signal then stays false. `--recording` selects one file; --recordings selects an alias-named directory.
 
 ## Roadmap and scope
 
-Current capabilities cover single-turn suites, trajectory alignment, capability reports, export adapters (`export --format langsmith / langfuse / json`, landing delta maps in existing trace stores) and schema validation with property types and enums. Hosted scheduling and multi-turn analysis remain future directions.
+Current capabilities cover single-turn suites, trajectory alignment, capability reports, export adapters (`export --format langsmith / langfuse / json`, landing delta maps in existing trace stores), schema validation with property types and enums, and load-time validation of suites, recordings and diff documents (malformed input prints one `error:` line and exits 2). Hosted scheduling and multi-turn analysis remain future directions.
 
-- Rule signals do not establish overall quality or safety; whether additional refusals are regressions depends on task expectations.
+- Rule signals do not establish overall quality or safety; whether additional refusals count as regressions follows each task's `expected_no_refusal` setting.
 - The demo calls no real model and cannot rank models or establish a version regression.
 
 ![Terminal recording](assets/demo.gif) · [Recording script](docs/demo.tape)

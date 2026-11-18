@@ -19,7 +19,7 @@ import tomllib
 from regatlas import __version__
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-EXPECTED_VERSION = "0.3.0"
+EXPECTED_VERSION = "0.4.0"
 
 
 def test_version_file() -> None:
@@ -50,7 +50,7 @@ def test_web_site_json() -> None:
 
 def test_changelog_sections() -> None:
     text = (REPO_ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
-    for section in ("[0.1.0]", "[0.2.0]", "[0.3.0]"):
+    for section in ("[0.1.0]", "[0.2.0]", "[0.3.0]", "[0.4.0]"):
         assert f"## {section}" in text
         assert re.search(rf"^\[{re.escape(section[1:-1])}\]: .+$", text, re.MULTILINE)
 

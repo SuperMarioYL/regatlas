@@ -10,7 +10,7 @@
   },
   "meta": {
     "visual_profile": "neon-particle",
-    "content_version": "0.3.0",
+    "content_version": "0.4.0",
     "demo_source": "docs/demo-results.json"
   },
   "hero": {
@@ -139,8 +139,8 @@
           "en": "Capabilities and integration"
         },
         "body": {
-          "zh": "内置 toolcalling 与 refusal 两套任务。工具成功信号检查是否输出预期工具名，不执行那个工具；schema 检查 JSON 与 required 字段，不是完整 JSON Schema 验证。拒答由中英文词表检测。",
-          "en": "The repository includes toolcalling and refusal suites. Tool success checks whether the expected tool name was emitted; it does not execute the tool. Schema checks cover JSON and required fields, not full JSON Schema validation. Refusal detection uses English and Chinese phrase lists."
+          "zh": "内置 toolcalling 与 refusal 两套任务。工具成功信号检查是否输出预期工具名，不执行那个工具；schema 检查 JSON、required 字段以及声明的属性类型与枚举，不是完整 JSON Schema 验证。拒答由中英文词表检测；任务可用 expected_no_refusal 声明拒答是否预期。",
+          "en": "The repository includes toolcalling and refusal suites. Tool success checks whether the expected tool name was emitted; it does not execute the tool. Schema checks cover JSON, required fields and declared property types/enums, not full JSON Schema validation. Refusal detection uses English and Chinese phrase lists; a task's expected_no_refusal setting decides whether a refusal counts."
         },
         "image": {
           "light": "/assets/presentation/integrations-light.svg",
@@ -163,8 +163,8 @@
           "en": "Usage"
         },
         "body": {
-          "zh": "内置 toolcalling 与 refusal 两套任务。工具成功信号检查是否输出预期工具名，不执行那个工具；schema 检查 JSON 与 required 字段，不是完整 JSON Schema 验证。拒答由中英文词表检测。",
-          "en": "The repository includes toolcalling and refusal suites. Tool success checks whether the expected tool name was emitted; it does not execute the tool. Schema checks cover JSON and required fields, not full JSON Schema validation. Refusal detection uses English and Chinese phrase lists."
+          "zh": "内置 toolcalling 与 refusal 两套任务。工具成功信号检查是否输出预期工具名，不执行那个工具；schema 检查 JSON、required 字段以及声明的属性类型与枚举，不是完整 JSON Schema 验证。拒答由中英文词表检测；任务可用 expected_no_refusal 声明拒答是否预期。",
+          "en": "The repository includes toolcalling and refusal suites. Tool success checks whether the expected tool name was emitted; it does not execute the tool. Schema checks cover JSON, required fields and declared property types/enums, not full JSON Schema validation. Refusal detection uses English and Chinese phrase lists; a task's expected_no_refusal setting decides whether a refusal counts."
         }
       },
       {
@@ -173,8 +173,8 @@
           "en": "Configuration"
         },
         "body": {
-          "zh": "端点变量为 `REGATLAS_<NAME>_BASE_URL`、`_API_KEY`、`_MODEL`，别名去掉非字母数字再大写。套件指定 capability、expected_tool_call 与 expected_schema.required。`--recording` 选单文件，`--recordings` 选按别名命名的目录。",
-          "en": "Endpoint variables are `REGATLAS_<NAME>_BASE_URL`, `_API_KEY` and `_MODEL`, using the alias uppercased after removing non-alphanumerics. Suites specify capability, expected_tool_call and expected_schema.required. `--recording` selects one file; --recordings selects an alias-named directory."
+          "zh": "端点变量为 `REGATLAS_<NAME>_BASE_URL`、`_API_KEY`、`_MODEL`，别名去掉非字母数字再大写。套件指定 capability、expected_tool_call 与 `expected_schema`（required 与可选的 properties 类型/enum）；配置在加载时校验，写错会输出一行 error 并以退出码 2 结束。`--recording` 选单文件，`--recordings` 选按别名命名的目录。",
+          "en": "Endpoint variables are `REGATLAS_<NAME>_BASE_URL`, `_API_KEY` and `_MODEL`, using the alias uppercased after removing non-alphanumerics. Suites specify capability, expected_tool_call and `expected_schema` (required plus optional property types/enums); the declaration is validated at load, so a typo prints one error line and exits 2. `--recording` selects one file; --recordings selects an alias-named directory."
         }
       }
     ]
@@ -234,8 +234,8 @@
   },
   "limitations": [
     {
-      "zh": "规则信号不等于整体质量或安全性；拒答增加是否为回归取决于任务预期。",
-      "en": "Rule signals do not establish overall quality or safety; whether additional refusals are regressions depends on task expectations."
+      "zh": "规则信号不等于整体质量或安全性；拒答是否计为回归取决于任务的 expected_no_refusal 设置。",
+      "en": "Rule signals do not establish overall quality or safety; whether additional refusals count as regressions follows each task's expected_no_refusal setting."
     },
     {
       "zh": "本示例没有真实模型调用，不能用于给任何模型排名或声称其版本退化。",
@@ -243,6 +243,6 @@
     }
   ],
   "footer": {
-    "tag": "0.3.0 · Python 3.12+ · MIT"
+    "tag": "0.4.0 · Python 3.12+ · MIT"
   }
 }

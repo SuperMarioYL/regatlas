@@ -1,6 +1,9 @@
 """Unit tests for the breakage detectors (milestone m1)."""
 from __future__ import annotations
 
+import pytest
+from pydantic import ValidationError
+
 from regatlas.breakage import (
     Breakage,
     compute_breakage,
@@ -196,3 +199,88 @@ def test_compute_breakage_refusal_task() -> None:
     assert br.refusal_detected is True
     assert br.tool_call_success is None
     assert br.schema_violation is False
+
+
+# --- expected_no_refusal gates the refusal signal (v0.4.0) ---------------
+
+def test_expected_no_refusal_false_suppresses_refusal_signal() -> None:
+    """A task that permits or expects a refusal must not report it as breakage."""
+    task = _task(expected_no_refusal=False)
+    br = compute_breakage(task, {"content": "抱歉，我无法回答这个问题。", "tool_calls": None})
+    assert br.refusal_detected is False
+
+
+def test_expected_no_refusal_true_still_flags_refusal() -> None:
+    task = _task()  # defaults to True
+    br = compute_breakage(task, {"content": "I'm sorry, but I can't help with that.", "tool_calls": None})
+    assert br.refusal_detected is True
+
+
+def test_expected_no_refusal_false_ignores_helpful_content() -> None:
+    task = _task(expected_no_refusal=False)
+    br = compute_breakage(task, {"content": "Three tips for a faster loop.", "tool_calls": None})
+    assert br.refusal_detected is False
+
+
+# --- expected_schema config is validated at suite load (v0.4.0) -----------
+
+def _task_with_schema(schema: dict) -> Task:
+    return _task(expected_schema=schema)
+
+
+def test_suite_rejects_scalar_required() -> None:
+    """v0.3.0 exploded 'location' into single-char keys and always violated."""
+    with pytest.raises(ValidationError, match="expected_schema.required"):
+        _task_with_schema({"required": "location"})
+
+
+def test_suite_rejects_non_string_required_entry() -> None:
+    with pytest.raises(ValidationError, match="expected_schema.required"):
+        _task_with_schema({"required": [1]})
+
+
+def test_suite_rejects_unknown_property_type() -> None:
+    """v0.3.0 silently disabled the type check for a typo'd type name."""
+    with pytest.raises(
+        ValidationError, match=r"expected_schema\.properties\.location\.type"
+    ):
+        _task_with_schema({"properties": {"location": {"type": "str"}}})
+
+
+def test_suite_rejects_non_mapping_property_spec() -> None:
+    with pytest.raises(
+        ValidationError, match=r"expected_schema\.properties\.location"
+    ):
+        _task_with_schema({"properties": {"location": "string"}})
+
+
+def test_suite_rejects_non_list_enum() -> None:
+    with pytest.raises(
+        ValidationError, match=r"expected_schema\.properties\.location\.enum"
+    ):
+        _task_with_schema({"properties": {"location": {"enum": "Beijing"}}})
+
+
+def test_suite_accepts_supported_property_shapes() -> None:
+    task = _task_with_schema(
+        {
+            "required": ["location"],
+            "properties": {
+                "location": {"type": "string", "description": "City name."},
+                "unit": {"enum": ["c", "f"]},
+            },
+            # Unknown JSON-Schema keys stay allowed — regatlas is not a full
+            # schema validator.
+            "additionalProperties": False,
+        }
+    )
+    assert task.expected_schema["properties"]["location"]["type"] == "string"
+
+
+def test_schema_type_vocabulary_matches_detector() -> None:
+    """Suite validation and the detector must accept the same type names."""
+    from regatlas.breakage import _JSON_TYPES
+    from regatlas.suite import SCHEMA_PROPERTY_TYPES
+
+    assert tuple(_JSON_TYPES) == SCHEMA_PROPERTY_TYPES
+

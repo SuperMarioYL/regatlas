@@ -7,7 +7,8 @@ is an array of ``{id, type, function:{name, arguments}}``):
 * ``tool_call_success`` — did any emitted ``tool_calls[].function.name`` match
   the task's ``expected_tool_call``? ``None`` when the signal is not
   applicable (the task declares no expected tool call).
-* ``refusal_detected`` — does ``content`` match a refusal lexicon (zh + en)?
+* ``refusal_detected`` — does ``content`` match a refusal lexicon (zh + en) on
+  a task that declares refusals are not expected?
 * ``schema_violation`` — does every emitted ``arguments`` parse as JSON and
   satisfy the task's declared ``expected_schema`` (required keys present)?
 
@@ -135,7 +136,9 @@ def _value_matches_type(value: Any, declared: str) -> bool:
 
     ``boolean`` is checked before the numeric types so JSON ``true``/``false``
     never satisfy ``number``/``integer`` (bool is an int subclass in Python);
-    ``null`` is the JSON ``None``.
+    ``null`` is the JSON ``None``. An unknown type name is permissive here, but
+    a suite loaded through ``suite.Task`` rejects unknown names at load time,
+    so this branch only serves direct callers.
     """
     if declared == "null":
         return value is None
@@ -229,13 +232,15 @@ def compute_breakage(task: Task, response: dict[str, Any]) -> Breakage:
     """Compute all three breakage signals for one task response.
 
     ``response`` follows the regatlas internal shape: ``{content, tool_calls}``
-    extracted from ``choices[0].message``.
+    extracted from ``choices[0].message``. ``refusal_detected`` is gated by
+    ``task.expected_no_refusal``: for a task where a refusal is acceptable or
+    expected, a lexicon match is not breakage.
     """
     content = response.get("content")
     tool_calls = response.get("tool_calls")
     return Breakage(
         tool_call_success=detect_tool_call_success(task.expected_tool_call, tool_calls),
-        refusal_detected=detect_refusal(content),
+        refusal_detected=detect_refusal(content) if task.expected_no_refusal else False,
         schema_violation=detect_schema_violation(
             tool_calls, task.expected_tool_call, task.expected_schema
         ),

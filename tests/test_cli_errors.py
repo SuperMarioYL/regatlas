@@ -294,3 +294,81 @@ def test_diff_duplicate_span_keys_exit_2(tmp_path: Path) -> None:
     )
     assert result.exit_code == 2
     _assert_err(result, "duplicate", "t1")
+
+
+def test_replay_scalar_required_schema_rejected(tmp_path: Path) -> None:
+    """v0.3.0 exploded a scalar required into single-char keys (always violated)."""
+    suite = tmp_path / "scalar-required.yaml"
+    suite.write_text(
+        "name: probe\n"
+        "tasks:\n"
+        "  - id: t1\n"
+        "    capability: tool-calling\n"
+        "    prompt: weather?\n"
+        "    expected_tool_call: get_weather\n"
+        "    expected_schema: { required: location }\n",
+        encoding="utf-8",
+    )
+    out = tmp_path / "t.jsonl"
+    result = runner.invoke(
+        app,
+        [
+            "replay",
+            "--suite", str(suite),
+            "--model", "opus-4",
+            "--recording", str(fixture_path("opus-4.responses.json")),
+            "--out", str(out),
+        ],
+    )
+    assert result.exit_code == 2
+    _assert_err(result, "expected_schema")
+    assert not out.exists()
+
+
+def test_replay_recording_entry_not_an_object(tmp_path: Path) -> None:
+    """v0.3.0 turned this malformed fixture into exit-0 error spans."""
+    rec = tmp_path / "bad.responses.json"
+    rec.write_text('{"t1": "not-a-dict"}', encoding="utf-8")
+    out = tmp_path / "t.jsonl"
+    result = _replay_toolcalling(rec, out)
+    assert result.exit_code == 2
+    _assert_err(result, "t1", "JSON object")
+    assert not out.exists()
+
+
+def _diff_doc_with_delta(tmp_path: Path, value: int) -> Path:
+    doc = tmp_path / "out-of-range.json"
+    doc.write_text(
+        '{"from_model": "a", "to_model": "b", "suite": "s", "span_diffs": ['
+        '{"task_id": "t1", "turn_idx": 0, "capability": "c",'
+        ' "from_breakage": {}, "to_breakage": {},'
+        f' "deltas": {{"tool_call_success": {value}}}}}]}}',
+        encoding="utf-8",
+    )
+    return doc
+
+
+def test_report_out_of_range_delta_rejected(tmp_path: Path) -> None:
+    """v0.3.0 rendered a delta of 7 as a success marker and '+700%'."""
+    doc = _diff_doc_with_delta(tmp_path, 7)
+    result = runner.invoke(app, ["report", "--diff", str(doc)])
+    assert result.exit_code == 2
+    _assert_err(result, "tool_call_success", "-1")
+
+
+def test_export_out_of_range_delta_rejected(tmp_path: Path) -> None:
+    doc = _diff_doc_with_delta(tmp_path, 7)
+    result = runner.invoke(
+        app, ["export", "--diff", str(doc), "--format", "json"]
+    )
+    assert result.exit_code == 2
+    _assert_err(result, "tool_call_success", "-1")
+
+
+def test_report_in_range_deltas_still_render(tmp_path: Path) -> None:
+    """Regression: -1/0/+1/null remain valid after the range check."""
+    doc = _diff_doc_with_delta(tmp_path, -1)
+    result = runner.invoke(app, ["report", "--diff", str(doc)])
+    assert result.exit_code == 0
+    assert "-100%" in result.stdout
+
